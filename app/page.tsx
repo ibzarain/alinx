@@ -76,34 +76,6 @@ function Nav() {
   );
 }
 
-/* ─── TICKER ─────────────────────────────────────── */
-const TICKER_ITEMS = [
-  "Vertically Integrated",
-  "CSA A277 Certified",
-  "35% Faster Build",
-  "±0.01\" Frame Precision",
-  "METALOQ Technology",
-  "Ontario-Built",
-  "Panelized & Volumetric",
-  "Up to 20 Storeys",
-  "Third-Party Audited QMS",
-];
-
-function Ticker() {
-  const doubled = [...TICKER_ITEMS, ...TICKER_ITEMS];
-  return (
-    <div className="ticker" aria-hidden="true">
-      <div className="ticker-track">
-        {doubled.map((item, i) => (
-          <span key={i} className="ticker-item">
-            {item}<span className="ticker-sep" />
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 /* ─── STATS ─────────────────────────────────────── */
 const STATS = [
   { value: "35",    unit: "%",  desc: "Faster Superstructure Build" },
@@ -145,19 +117,17 @@ function Services() {
 
       <div className="services-grid">
         {/* Panelized */}
-        <div className="svc-card reveal">
-          <div className="svc-num">01 / PANELIZED</div>
-          <div className="svc-icon">
-            <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
-              <rect x="3" y="17" width="21" height="30" stroke="#7a9e4a" strokeWidth="1.5"/>
-              <rect x="28" y="17" width="21" height="30" stroke="#7a9e4a" strokeWidth="1.5"/>
-              <rect x="3" y="5"  width="46" height="10" stroke="#7a9e4a" strokeWidth="1.5"/>
-              <line x1="13" y1="17" x2="13" y2="47" stroke="#7a9e4a" strokeWidth="0.75" strokeDasharray="3 3"/>
-              <line x1="38" y1="17" x2="38" y2="47" stroke="#7a9e4a" strokeWidth="0.75" strokeDasharray="3 3"/>
-              <line x1="3"  y1="32" x2="24" y2="32" stroke="#c8a84e" strokeWidth="0.75" strokeDasharray="3 3"/>
-              <line x1="28" y1="32" x2="49" y2="32" stroke="#c8a84e" strokeWidth="0.75" strokeDasharray="3 3"/>
-            </svg>
+        <div className="svc-card svc-card--panelized reveal">
+          <div className="svc-card-bg" aria-hidden>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/images/panelized.jpg"
+              alt=""
+              className="svc-card-photo"
+            />
           </div>
+          <div className="svc-card-inner">
+          <div className="svc-num">01 / PANELIZED</div>
           <h3 className="svc-h3">Panelized<br />Components</h3>
           <p className="svc-desc">
             Interior and fully-finished exterior structural panels — engineered for
@@ -176,21 +146,21 @@ function Services() {
             <li>Structural steel elements, lintels and slab shoring systems</li>
             <li>Complete shop drawings and cast-in-place cores</li>
           </ul>
+          </div>
         </div>
 
         {/* Volumetric */}
-        <div className="svc-card reveal d1">
-          <div className="svc-num">02 / VOLUMETRIC</div>
-          <div className="svc-icon">
-            <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
-              <rect x="4"  y="30" width="20" height="18" stroke="#7a9e4a" strokeWidth="1.5"/>
-              <rect x="28" y="30" width="20" height="18" stroke="#7a9e4a" strokeWidth="1.5"/>
-              <rect x="4"  y="12" width="20" height="16" stroke="#7a9e4a" strokeWidth="1.5"/>
-              <rect x="28" y="12" width="20" height="16" stroke="#7a9e4a" strokeWidth="1.5"/>
-              <path d="M4 12 L14 5 L48 5 L48 12" stroke="#c8a84e" strokeWidth="1" opacity="0.7"/>
-              <line x1="28" y1="5" x2="28" y2="12" stroke="#c8a84e" strokeWidth="1" opacity="0.5"/>
-            </svg>
+        <div className="svc-card svc-card--volumetric reveal d1">
+          <div className="svc-card-bg" aria-hidden>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/images/volumetric.jpg?v=3"
+              alt=""
+              className="svc-card-photo svc-card-photo--zoom"
+            />
           </div>
+          <div className="svc-card-inner">
+          <div className="svc-num">02 / VOLUMETRIC</div>
           <h3 className="svc-h3">Turnkey<br />Modular</h3>
           <p className="svc-desc">
             True volumetric structures via proprietary METALOQ technology — engineered
@@ -209,6 +179,7 @@ function Services() {
             <li>Single-source accountability with consistent, predictable timelines</li>
             <li>Flexible layouts and finishes without production delays</li>
           </ul>
+          </div>
         </div>
       </div>
     </section>
@@ -594,7 +565,6 @@ export default function Home() {
     <>
       <Nav />
       <ScrollScrubHero />
-      <Ticker />
       <Stats />
       <Services />
       <Process />

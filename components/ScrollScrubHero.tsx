@@ -12,26 +12,38 @@ type HeroManifest = {
 };
 
 const PHASES = [
-  {
-    label: "Steel Skeleton",
-    caption: "Factory-engineered steel frame assembly",
-  },
-  {
-    label: "Facade Panels",
-    caption: "Panelized envelope, precision-fit",
-  },
-  {
-    label: "Glass Facade",
-    caption: "Glazing and envelope completion",
-  },
-  {
-    label: "Site Complete",
-    caption: "Delivered, erected, ready",
-  },
+  "Steel Skeleton",
+  "Facade Panels",
+  "Glass Facade",
+  "Site Complete",
 ] as const;
 
 const SCROLL_HEIGHT_VH = 300;
 const HEADLINE_FADE_END = 0.2;
+
+/** Map scrub progress to 0–1 over the phase section only (after headline fades) */
+function phaseScrollProgress(progress: number) {
+  if (progress <= HEADLINE_FADE_END) return 0;
+  return (progress - HEADLINE_FADE_END) / (1 - HEADLINE_FADE_END);
+}
+
+/** Hold full opacity most of each segment; short fades at edges only */
+function phaseWordOpacity(phaseIndex: number, phaseProgress: number) {
+  const n = PHASES.length;
+  const seg = 1 / n;
+  const start = phaseIndex * seg;
+  const end = start + seg;
+  const edge = seg * 0.12;
+
+  if (phaseProgress < start || phaseProgress > end) return 0;
+  if (phaseProgress < start + edge) {
+    return (phaseProgress - start) / edge;
+  }
+  if (phaseProgress > end - edge) {
+    return (end - phaseProgress) / edge;
+  }
+  return 1;
+}
 
 function clamp(n: number, min: number, max: number) {
   return Math.min(max, Math.max(min, n));
@@ -83,7 +95,6 @@ export default function ScrollScrubHero() {
   const [reducedMotion, setReducedMotion] = useState(false);
   const [progress, setProgress] = useState(0);
   const [headlineOpacity, setHeadlineOpacity] = useState(1);
-  const [activePhase, setActivePhase] = useState(0);
 
   const frameCount = manifest?.frameCount ?? 0;
   const cacheKey =
@@ -130,7 +141,6 @@ export default function ScrollScrubHero() {
 
     setProgress(p);
     setHeadlineOpacity(1 - clamp(p / HEADLINE_FADE_END, 0, 1));
-    setActivePhase(Math.min(PHASES.length - 1, Math.floor(p * PHASES.length)));
 
     window.dispatchEvent(
       new CustomEvent("hero-scrub-progress", { detail: { progress: p } })
@@ -228,7 +238,9 @@ export default function ScrollScrubHero() {
     };
   }, [reducedMotion, updateFromScroll, drawFrame, ready]);
 
-  const showCaption = progress >= HEADLINE_FADE_END;
+  const phaseProgress = phaseScrollProgress(progress);
+  const phaseStageVisible = phaseProgress > 0;
+
   const sectionStyle = reducedMotion
     ? undefined
     : ({ height: `${SCROLL_HEIGHT_VH}vh` } as React.CSSProperties);
@@ -257,18 +269,9 @@ export default function ScrollScrubHero() {
             pointerEvents: headlineOpacity < 0.1 ? "none" : "auto",
           }}
         >
-          <div className="hero-eyebrow">
-            <div className="eyebrow-line" />
-            <span className="eyebrow-text">
-              CSA A277 Certified · Ontario, Canada
-            </span>
-          </div>
           <h1 className="hero-h1">
             <span className="line1">Vertically</span>
             <span className="line2">Integrated.</span>
-            <span className="line3">
-              Fast · Precise · Economical · Dependable
-            </span>
           </h1>
           <p className="hero-sub">
             Factory-engineered modular structures and panelized systems built to
@@ -285,24 +288,31 @@ export default function ScrollScrubHero() {
           </div>
         </div>
 
-        <div className="hero-phase">
-          {PHASES.map((p, i) => (
-            <div
-              key={p.label}
-              className={`phase-item${i === activePhase ? " active" : ""}`}
-            >
-              <div className="phase-dot" />
-              <span className="phase-label">{p.label}</span>
-            </div>
-          ))}
-        </div>
-
-        <p
-          className={`hero-phase-caption${showCaption ? " visible" : ""}`}
+        <div
+          className={`hero-phase-stage${phaseStageVisible ? " visible" : ""}`}
           aria-live="polite"
+          aria-atomic="true"
         >
-          {PHASES[activePhase].caption}
-        </p>
+          {PHASES.map((label, i) => {
+            const wordOpacity = phaseWordOpacity(i, phaseProgress);
+            if (wordOpacity < 0.02) return null;
+            const t = 1 - wordOpacity;
+            return (
+              <span
+                key={label}
+                className="hero-phase-word"
+                style={{
+                  opacity: wordOpacity,
+                  transform: `translate(-50%, calc(-50% + ${t * 6}px))`,
+                  filter: t > 0.15 ? `blur(${t * 3}px)` : "none",
+                }}
+                aria-hidden={wordOpacity < 0.5}
+              >
+                {label}
+              </span>
+            );
+          })}
+        </div>
 
         {!reducedMotion && (
           <div className="hero-scrub-progress" aria-hidden>
