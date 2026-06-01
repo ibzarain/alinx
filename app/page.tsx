@@ -60,10 +60,6 @@ function Services() {
               superstructure completion approximately 35% faster and costs typically 20%
               lower versus conventional methods.
             </p>
-            <div className="svc-kpi">
-              <span className="kpi-v">35%</span>
-              <span className="kpi-l">Faster Completion</span>
-            </div>
             <ul className="svc-list">
               <li>Pre-insulated exterior walls with air barrier and multiple finish options</li>
               <li>Floor assemblies: composite decks, hollow-core plank, open web joists</li>
@@ -92,10 +88,6 @@ function Services() {
               to manufacturing-sector tolerances, scalable from single ADUs to 20-storey
               communities.
             </p>
-            <div className="svc-kpi">
-              <span className="kpi-v">±0.01&quot;</span>
-              <span className="kpi-l">Frame Height Precision</span>
-            </div>
             <ul className="svc-list">
               <li>Meets National Building Code of Canada across all project types</li>
               <li>Rapid deployment: urban, suburban, rural and remote locations</li>

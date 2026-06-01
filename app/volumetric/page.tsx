@@ -19,7 +19,7 @@ function useScrollReveal() {
 /* ─── HERO ───────────────────────────────────────── */
 function Hero() {
   return (
-    <section className="inner-hero">
+    <section className="inner-hero inner-hero--volumetric">
       <div className="inner-hero-content">
         <Link href="/" className="inner-hero-back">
           <svg viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7L9 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>

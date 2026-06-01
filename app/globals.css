@@ -444,48 +444,35 @@ nav.site-nav.nav-over-hero .nav-hamburger span { background: #fff; }
   transform: scale(1.05);
 }
 
-/* Panelized only: light bottom scrim on photo */
-.svc-card--panelized .svc-card-bg::after {
+/* Full-card tint — top to bottom, text readable everywhere */
+.svc-card-bg::after {
   content: "";
   position: absolute;
   inset: 0;
+  z-index: 1;
+  pointer-events: none;
   background: linear-gradient(
     to bottom,
-    transparent 0%,
-    transparent 38%,
-    rgba(8, 10, 14, 0.4) 62%,
-    rgba(8, 10, 14, 0.82) 100%
+    rgba(8, 10, 14, 0.72) 0%,
+    rgba(8, 10, 14, 0.78) 45%,
+    rgba(8, 10, 14, 0.88) 100%
   );
-  pointer-events: none;
-}
-
-.svc-card--volumetric .svc-card-bg::after {
-  display: none;
 }
 
 .svc-card-inner {
   position: relative;
-  z-index: 1;
-  padding: 3.5rem 3rem;
-  color: var(--hero-text);
-  margin-top: auto;
+  z-index: 2;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: 100%;
   width: 100%;
   box-sizing: border-box;
-  background: linear-gradient(
-    to top,
-    rgba(8, 10, 14, 0.94) 0%,
-    rgba(8, 10, 14, 0.72) 42%,
-    transparent 100%
-  );
-}
-
-.svc-card--volumetric .svc-card-inner {
-  background: linear-gradient(
-    to top,
-    rgba(8, 10, 14, 0.92) 0%,
-    rgba(8, 10, 14, 0.55) 38%,
-    transparent 72%
-  );
+  padding: 3.5rem 3rem;
+  color: var(--hero-text);
+  margin-top: 0;
+  background: transparent;
 }
 
 .svc-card::before, .svc-card::after {
@@ -530,30 +517,7 @@ nav.site-nav.nav-over-hero .nav-hamburger span { background: #fff; }
   color: rgba(240, 237, 230, 0.88);
   font-size: 0.95rem;
   line-height: 1.75;
-  margin-bottom: 2rem;
-}
-
-.svc-card .svc-kpi {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.65rem 1.35rem;
-  border: 1px solid rgba(240, 237, 230, 0.22);
-  background: rgba(0, 0, 0, 0.35);
-  backdrop-filter: blur(8px);
-  margin-bottom: 2rem;
-}
-.svc-card .kpi-v {
-  font-family: var(--font-space-mono, 'Space Mono', monospace);
-  font-size: 1.1rem;
-  color: #b8d88a;
-  font-weight: 700;
-}
-.svc-card .kpi-l {
-  font-size: 0.72rem;
-  color: var(--hero-text2);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  margin-bottom: 1.5rem;
 }
 
 .svc-card .svc-list {
@@ -1036,17 +1000,35 @@ footer {
   .projects-grid { grid-template-columns: 1fr; }
   .cta-offices { gap: 2rem; }
 }
-/* ─── SERVICE CARD EXPLORE LINK ─────────────────── */
+/* ─── SERVICE CARD CTA ──────────────────────────── */
 .svc-explore-link {
-  display: inline-flex; align-items: center; gap: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   margin-top: 2rem;
+  padding: 1rem 2.25rem;
+  background: var(--olive);
+  color: #fff;
   font-family: var(--font-barlow, 'Barlow Condensed', sans-serif);
-  font-size: 0.95rem; font-weight: 700;
-  text-transform: uppercase; letter-spacing: 0.1em;
-  color: var(--olive); text-decoration: none;
-  transition: gap 0.25s, color 0.2s;
+  font-size: 1.05rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  text-decoration: none;
+  border: none;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+  transition: background 0.25s, transform 0.2s, box-shadow 0.25s;
 }
-.svc-explore-link:hover { gap: 0.85rem; color: var(--olive2); }
+.svc-explore-link:hover {
+  background: var(--olive2);
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.4);
+}
+.svc-card .svc-explore-link {
+  align-self: flex-start;
+}
 
 /* ─── INNER PAGE HERO ──────────────────────────── */
 .inner-hero {
@@ -1055,6 +1037,8 @@ footer {
   padding: 10rem 6% 5rem;
   position: relative;
   overflow: hidden;
+  display: flex;
+  align-items: flex-end;
 }
 .inner-hero::before {
   content: '';
@@ -1064,6 +1048,7 @@ footer {
     linear-gradient(90deg, rgba(122,158,74,0.12) 1px, transparent 1px);
   background-size: 60px 60px;
   pointer-events: none;
+  z-index: 0;
 }
 .inner-hero::after {
   content: '';
@@ -1071,7 +1056,65 @@ footer {
   height: 120px;
   background: linear-gradient(to top, var(--bg3) 0%, transparent 100%);
   pointer-events: none;
+  z-index: 0;
 }
+
+/* Photo heroes — same assets as home service cards */
+.inner-hero--panelized,
+.inner-hero--volumetric {
+  min-height: 72vh;
+  background: #0a0c0e;
+  align-items: center;
+}
+
+.inner-hero--panelized::before {
+  background-image: url(/images/panelized.jpg);
+  background-size: cover;
+  background-position: center 42%;
+  opacity: 1;
+}
+
+.inner-hero--volumetric::before {
+  background-image: url(/images/volumetric.jpg);
+  background-size: cover;
+  background-position: center 22%;
+  opacity: 1;
+}
+
+.inner-hero--panelized::after,
+.inner-hero--volumetric::after {
+  inset: 0;
+  height: auto;
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(8, 10, 14, 0.72) 0%,
+      rgba(8, 10, 14, 0.82) 100%
+    ),
+    linear-gradient(to top, var(--bg3) 0%, transparent 24%);
+}
+
+.inner-hero--panelized .inner-hero-h1,
+.inner-hero--volumetric .inner-hero-h1 {
+  color: #f0ede6;
+}
+.inner-hero--panelized .inner-hero-sub,
+.inner-hero--volumetric .inner-hero-sub {
+  color: rgba(240, 237, 230, 0.82);
+}
+.inner-hero--panelized .inner-hero-back,
+.inner-hero--volumetric .inner-hero-back {
+  color: rgba(240, 237, 230, 0.55);
+}
+.inner-hero--panelized .ih-stat-label,
+.inner-hero--volumetric .ih-stat-label {
+  color: rgba(240, 237, 230, 0.55);
+}
+.inner-hero--panelized .inner-hero-stats,
+.inner-hero--volumetric .inner-hero-stats {
+  border-top-color: rgba(240, 237, 230, 0.15);
+}
+
 .inner-hero-content { position: relative; z-index: 1; max-width: 700px; }
 
 .inner-hero-back {
