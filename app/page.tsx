@@ -2,23 +2,59 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import ScrollScrubHero from "@/components/ScrollScrubHero";
 
 /* ─── NAV ─────────────────────────────────────── */
 function Nav() {
   const [scrolled, setScrolled] = useState(false);
+  const [overHero, setOverHero] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
+    const update = (heroProgress = 0) => {
+      const y = window.scrollY;
+      const engaged = y > 20 || heroProgress > 0.05;
+      setScrolled(engaged);
+      setOverHero(!engaged && y < 80);
+    };
+
+    const onScroll = () => {
+      const hero = document.getElementById("hero");
+      let heroProgress = 0;
+      if (hero && !hero.classList.contains("scroll-hero-reduced")) {
+        const scrollable = hero.offsetHeight - window.innerHeight;
+        if (scrollable > 0) {
+          heroProgress = Math.min(
+            1,
+            Math.max(0, -hero.getBoundingClientRect().top / scrollable)
+          );
+        }
+      }
+      update(heroProgress);
+    };
+
+    const onHeroProgress = (e: Event) => {
+      const { progress } = (e as CustomEvent<{ progress: number }>).detail;
+      update(progress);
+    };
+
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    window.addEventListener("hero-scrub-progress", onHeroProgress);
+    onScroll();
+
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("hero-scrub-progress", onHeroProgress);
+    };
   }, []);
 
   const close = () => setMobileOpen(false);
 
   return (
     <>
-      <nav className={`site-nav${scrolled ? " scrolled" : ""}`}>
+      <nav
+        className={`site-nav${scrolled ? " scrolled" : ""}${overHero ? " nav-over-hero" : ""}`}
+      >
         <a href="#" className="nav-logo">
           <Image
             src="/alinx-logo.png"
@@ -56,53 +92,6 @@ function Nav() {
         <a href="tel:2267247219" className="mobile-cta" onClick={close}>226-724-7219</a>
       </nav>
     </>
-  );
-}
-
-/* ─── HERO ─────────────────────────────────────── */
-function Hero() {
-  return (
-    <section id="hero">
-      <div className="hero-content">
-        <div className="hero-eyebrow">
-          <div className="eyebrow-line" />
-          <span className="eyebrow-text">CSA A277 Certified · Ontario, Canada</span>
-        </div>
-        <h1 className="hero-h1">
-          <span className="line1">Vertically</span>
-          <span className="line2">Integrated.</span>
-          <span className="line3">Fast · Precise · Economical · Dependable</span>
-        </h1>
-        <p className="hero-sub">
-          Factory-engineered modular structures and panelized systems built to
-          manufacturing tolerances, delivered 35% faster and 20% more economically
-          than conventional construction.
-        </p>
-        <div className="hero-actions">
-          <a href="#services" className="btn-primary">Explore Solutions</a>
-          <a href="#projects" className="btn-ghost">View Projects</a>
-        </div>
-      </div>
-
-      <div className="hero-phase">
-        {[
-          { label: "Steel Skeleton", active: true },
-          { label: "Facade Panels" },
-          { label: "Glass Facade" },
-          { label: "Site Complete" },
-        ].map((p) => (
-          <div key={p.label} className={`phase-item${p.active ? " active" : ""}`}>
-            <div className="phase-dot" />
-            <span className="phase-label">{p.label}</span>
-          </div>
-        ))}
-      </div>
-
-      <div className="hero-scroll">
-        <div className="scroll-bar" />
-        <span>Scroll</span>
-      </div>
-    </section>
   );
 }
 
@@ -622,7 +611,7 @@ export default function Home() {
   return (
     <>
       <Nav />
-      <Hero />
+      <ScrollScrubHero />
       <Ticker />
       <Stats />
       <Services />

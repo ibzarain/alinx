@@ -5,7 +5,9 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "extract-hero-frames": "node scripts/extract-hero-frames.mjs",
+    "replace-hero-video": "node scripts/replace-hero-video.mjs"
   },
   "dependencies": {
     "next": "16.2.6",
