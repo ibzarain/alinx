@@ -1036,6 +1036,338 @@ footer {
   .projects-grid { grid-template-columns: 1fr; }
   .cta-offices { gap: 2rem; }
 }
+/* ─── SERVICE CARD EXPLORE LINK ─────────────────── */
+.svc-explore-link {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  margin-top: 2rem;
+  font-family: var(--font-barlow, 'Barlow Condensed', sans-serif);
+  font-size: 0.95rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--olive); text-decoration: none;
+  transition: gap 0.25s, color 0.2s;
+}
+.svc-explore-link:hover { gap: 0.85rem; color: var(--olive2); }
+
+/* ─── INNER PAGE HERO ──────────────────────────── */
+.inner-hero {
+  min-height: 55vh;
+  background: #111e09;
+  padding: 10rem 6% 5rem;
+  position: relative;
+  overflow: hidden;
+}
+.inner-hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(122,158,74,0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(122,158,74,0.12) 1px, transparent 1px);
+  background-size: 60px 60px;
+  pointer-events: none;
+}
+.inner-hero::after {
+  content: '';
+  position: absolute; bottom: 0; left: 0; right: 0;
+  height: 120px;
+  background: linear-gradient(to top, var(--bg3) 0%, transparent 100%);
+  pointer-events: none;
+}
+.inner-hero-content { position: relative; z-index: 1; max-width: 700px; }
+
+.inner-hero-back {
+  display: inline-flex; align-items: center; gap: 0.6rem;
+  font-family: var(--font-space-mono, 'Space Mono', monospace);
+  font-size: 0.62rem; color: rgba(212,236,184,0.45);
+  letter-spacing: 0.15em; text-transform: uppercase;
+  text-decoration: none; margin-bottom: 2.5rem;
+  transition: color 0.2s;
+}
+.inner-hero-back:hover { color: var(--olive); }
+.inner-hero-back svg { width: 14px; height: 14px; }
+
+.inner-hero-tag {
+  font-family: var(--font-space-mono, 'Space Mono', monospace);
+  font-size: 0.65rem; color: var(--olive);
+  letter-spacing: 0.2em; text-transform: uppercase;
+  margin-bottom: 1rem;
+  display: flex; align-items: center; gap: 0.75rem;
+}
+.inner-hero-tag::before { content: ''; width: 2.5rem; height: 1px; background: var(--olive); flex-shrink: 0; }
+
+.inner-hero-h1 {
+  font-family: var(--font-barlow, 'Barlow Condensed', sans-serif);
+  font-size: clamp(3.2rem, 6.5vw, 7rem);
+  font-weight: 900; line-height: 0.92;
+  text-transform: uppercase; letter-spacing: 0.02em;
+  color: #d4ecb8; margin-bottom: 1.5rem;
+  text-shadow: 0 2px 24px rgba(0,0,0,0.4);
+}
+.inner-hero-h1 em { color: var(--olive); font-style: normal; }
+
+.inner-hero-sub {
+  font-size: 1.05rem; color: rgba(212,236,184,0.65);
+  line-height: 1.7; max-width: 520px; margin-bottom: 3rem;
+}
+
+.inner-hero-stats {
+  display: flex; gap: 3rem; flex-wrap: wrap;
+  padding-top: 2.5rem;
+  border-top: 1px solid rgba(122,158,74,0.2);
+}
+.ih-stat { text-align: left; }
+.ih-stat-num {
+  font-family: var(--font-barlow, 'Barlow Condensed', sans-serif);
+  font-size: 2.5rem; font-weight: 800;
+  color: #c8a84e; line-height: 1; margin-bottom: 0.25rem;
+}
+.ih-stat-unit { font-size: 0.55em; color: var(--olive); }
+.ih-stat-label { font-size: 0.72rem; color: rgba(212,236,184,0.45); letter-spacing: 0.04em; }
+
+/* ─── INNER PAGE INTRO ─────────────────────────── */
+.inner-intro {
+  background: var(--bg3);
+  padding: 5rem 6%;
+  display: grid; grid-template-columns: 1fr 1.2fr;
+  gap: 5rem; align-items: center;
+}
+.inner-intro-lead {
+  font-family: var(--font-barlow, 'Barlow Condensed', sans-serif);
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  font-weight: 700; line-height: 1.2;
+  text-transform: uppercase; letter-spacing: 0.02em;
+  color: var(--text);
+}
+.inner-intro-lead em { color: var(--olive); font-style: normal; }
+.inner-intro-body { font-size: 1rem; color: var(--text2); line-height: 1.75; }
+
+/* ─── PROCESS STEPS ────────────────────────────── */
+.steps-section { background: var(--bg2); padding: 6rem 6%; }
+.steps-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 1px; background: var(--border); margin-top: 3rem;
+}
+.step-card {
+  background: var(--bg2); padding: 2.5rem 2rem;
+  position: relative; overflow: hidden;
+  transition: background 0.3s;
+}
+.step-card:hover { background: var(--bg); }
+.step-card::after {
+  content: '';
+  position: absolute; bottom: 0; left: 0; right: 0;
+  height: 2px; background: linear-gradient(90deg, var(--olive), transparent);
+  transform: scaleX(0); transform-origin: left;
+  transition: transform 0.4s;
+}
+.step-card:hover::after { transform: scaleX(1); }
+.step-num {
+  font-family: var(--font-barlow, 'Barlow Condensed', sans-serif);
+  font-size: 5rem; font-weight: 900; line-height: 1;
+  color: rgba(122,158,74,0.10); margin-bottom: 1rem;
+  user-select: none;
+}
+.step-title {
+  font-family: var(--font-barlow, 'Barlow Condensed', sans-serif);
+  font-size: 1.3rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.05em;
+  color: var(--text); margin-bottom: 0.75rem;
+}
+.step-text { font-size: 0.875rem; color: var(--text2); line-height: 1.65; }
+.step-includes {
+  margin-top: 1.25rem; padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  list-style: none; display: flex; flex-direction: column; gap: 0.4rem;
+}
+.step-includes li {
+  font-size: 0.78rem; color: var(--text2);
+  display: flex; gap: 0.6rem; align-items: flex-start;
+}
+.step-includes li::before { content: '—'; color: var(--olive); flex-shrink: 0; }
+
+/* ─── BENEFIT CARDS (3-up light) ─────────────────── */
+.benefit-section { background: var(--bg3); padding: 6rem 6%; }
+.benefit-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 1px; background: var(--border); margin-top: 3rem;
+}
+.benefit-card {
+  background: var(--bg2); padding: 2.5rem 2rem;
+  position: relative; transition: background 0.3s;
+}
+.benefit-card:hover { background: var(--bg); }
+.benefit-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: var(--olive); transform: scaleX(0); transform-origin: left;
+  transition: transform 0.4s;
+}
+.benefit-card:hover::before { transform: scaleX(1); }
+.benefit-icon { margin-bottom: 1.25rem; opacity: 0.8; }
+.benefit-title {
+  font-family: var(--font-barlow, 'Barlow Condensed', sans-serif);
+  font-size: 1.35rem; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.04em;
+  color: var(--text); margin-bottom: 0.75rem;
+}
+.benefit-text { font-size: 0.875rem; color: var(--text2); line-height: 1.65; }
+.benefit-stat {
+  margin-top: 1.25rem;
+  font-family: var(--font-barlow, 'Barlow Condensed', sans-serif);
+  font-size: 2rem; font-weight: 800; color: var(--olive);
+}
+.benefit-stat-label { font-size: 0.7rem; color: var(--text2); text-transform: uppercase; letter-spacing: 0.08em; }
+
+/* ─── WEIGHT CHART (inner pages) ─────────────────── */
+.weight-section { background: var(--bg2); padding: 6rem 6%; }
+.weight-layout {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 5rem; align-items: center; margin-top: 3rem;
+}
+.weight-note { font-size: 0.875rem; color: var(--text2); line-height: 1.65; margin-top: 1.5rem; }
+
+/* ─── DARK FEATURE SECTION (use-cases, METALOQ) ──── */
+.dark-feature-section {
+  --text:   #d4ecb8;
+  --text2:  rgba(192,224,152,0.60);
+  --border: rgba(192,224,152,0.10);
+  background: #0b1808; position: relative; overflow: hidden;
+  padding: 6rem 6%;
+}
+.dark-feature-section::before {
+  content: ''; position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(122,158,74,0.15) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(122,158,74,0.15) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none;
+}
+.dark-feature-section > * { position: relative; z-index: 1; }
+
+/* ─── USE CASE GRID ────────────────────────────── */
+.use-case-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 1px; background: rgba(122,158,74,0.12); margin-top: 3rem;
+}
+.use-case-card {
+  background: rgba(255,255,255,0.03); padding: 2rem 1.75rem;
+  transition: background 0.3s;
+}
+.use-case-card:hover { background: rgba(122,158,74,0.08); }
+.uc-num {
+  font-family: var(--font-space-mono, 'Space Mono', monospace);
+  font-size: 0.58rem; color: rgba(200,168,78,0.4);
+  letter-spacing: 0.2em; margin-bottom: 0.75rem;
+}
+.uc-icon { margin-bottom: 0.75rem; }
+.uc-title {
+  font-family: var(--font-barlow, 'Barlow Condensed', sans-serif);
+  font-size: 1.1rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.04em;
+  color: #d4ecb8; line-height: 1.2;
+}
+
+/* ─── METALOQ SPEC GRID ────────────────────────── */
+.metaloq-layout {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 5rem; align-items: start;
+}
+.metaloq-spec-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr);
+  gap: 1px; background: rgba(122,158,74,0.12);
+  margin-bottom: 2rem;
+}
+.ms-cell { background: rgba(0,0,0,0.25); padding: 1.75rem 1.5rem; }
+.ms-val {
+  font-family: var(--font-barlow, 'Barlow Condensed', sans-serif);
+  font-size: 2.2rem; font-weight: 800; color: #c8a84e;
+  line-height: 1; margin-bottom: 0.35rem;
+}
+.ms-label { font-size: 0.72rem; color: rgba(192,224,152,0.50); letter-spacing: 0.06em; }
+.metaloq-features { display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1.5rem; }
+.mf-item {
+  display: flex; gap: 0.75rem;
+  font-size: 0.875rem; color: rgba(192,224,152,0.65); line-height: 1.6;
+}
+.mf-item::before { content: '→'; color: var(--olive); flex-shrink: 0; font-weight: 700; }
+.metaloq-spec-table { border: 1px solid rgba(122,158,74,0.15); }
+.metaloq-spec-table .spec-row { border-bottom-color: rgba(122,158,74,0.10); }
+.metaloq-spec-table .spec-name { color: rgba(192,224,152,0.60); }
+.metaloq-spec-table .spec-val { color: #8dc87a; }
+
+/* ─── STEEL ADVANTAGES 4-UP (dark) ──────────────── */
+.steel-adv-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr);
+  gap: 1px; background: rgba(122,158,74,0.12); margin-top: 3rem;
+}
+.steel-adv-card {
+  background: rgba(255,255,255,0.03); padding: 2.5rem 2rem;
+  transition: background 0.3s;
+}
+.steel-adv-card:hover { background: rgba(122,158,74,0.07); }
+.sa-num {
+  font-family: var(--font-space-mono, 'Space Mono', monospace);
+  font-size: 0.58rem; color: rgba(200,168,78,0.4);
+  letter-spacing: 0.2em; margin-bottom: 1rem;
+}
+.sa-title {
+  font-family: var(--font-barlow, 'Barlow Condensed', sans-serif);
+  font-size: 1.4rem; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.04em;
+  color: #d4ecb8; margin-bottom: 0.75rem;
+}
+.sa-text { font-size: 0.875rem; color: rgba(192,224,152,0.60); line-height: 1.65; }
+.sa-bullets {
+  margin-top: 1rem; list-style: none;
+  display: flex; flex-direction: column; gap: 0.4rem;
+}
+.sa-bullets li { font-size: 0.8rem; color: rgba(192,224,152,0.48); display: flex; gap: 0.6rem; }
+.sa-bullets li::before { content: '—'; color: var(--olive); flex-shrink: 0; }
+
+/* ─── CERT STRIP (inner pages) ──────────────────── */
+.inner-certs {
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 1.5rem 6%;
+  display: flex; justify-content: center;
+  gap: 3rem; flex-wrap: wrap;
+}
+
+/* ─── INNER PAGE CTA ─────────────────────────────── */
+.inner-cta {
+  background: var(--bg3);
+  padding: 6rem 6%;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  border-top: 1px solid var(--border);
+}
+.inner-cta::before {
+  content: ''; position: absolute; top:50%; left:50%;
+  transform: translate(-50%,-50%);
+  width: 600px; height: 400px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(122,158,74,0.07) 0%, transparent 65%);
+  pointer-events: none;
+}
+.inner-cta > * { position: relative; z-index: 1; }
+
+/* ─── RESPONSIVE (inner pages) ──────────────────── */
+@media (max-width: 900px) {
+  .inner-intro { grid-template-columns: 1fr; gap: 2.5rem; }
+  .steps-grid { grid-template-columns: 1fr 1fr; }
+  .benefit-grid { grid-template-columns: 1fr 1fr; }
+  .use-case-grid { grid-template-columns: repeat(2, 1fr); }
+  .metaloq-layout { grid-template-columns: 1fr; gap: 3rem; }
+  .steel-adv-grid { grid-template-columns: 1fr; }
+  .weight-layout { grid-template-columns: 1fr; gap: 2.5rem; }
+}
+@media (max-width: 600px) {
+  .inner-hero { padding: 8rem 5% 4rem; }
+  .steps-grid { grid-template-columns: 1fr; }
+  .benefit-grid { grid-template-columns: 1fr; }
+  .use-case-grid { grid-template-columns: 1fr 1fr; }
+  .inner-hero-stats { gap: 2rem; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;

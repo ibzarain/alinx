@@ -1,80 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import Image from "next/image";
+import { useEffect } from "react";
+import Link from "next/link";
 import ScrollScrubHero from "@/components/ScrollScrubHero";
-
-/* ─── NAV ─────────────────────────────────────── */
-function Nav() {
-  const [scrolled, setScrolled] = useState(false);
-  const [overHero, setOverHero] = useState(true);
-  const [mobileOpen, setMobileOpen] = useState(false);
-
-  useEffect(() => {
-    const update = () => {
-      const y = window.scrollY;
-      const hero = document.getElementById("hero");
-      // Hero canvas is sticky and visible until the section fully scrolls off.
-      // Keep nav dark while any part of the hero section is still in the viewport.
-      const heroShowing = hero
-        ? hero.getBoundingClientRect().bottom > 0
-        : y < window.innerHeight;
-      setOverHero(heroShowing);
-      setScrolled(!heroShowing);
-    };
-
-    window.addEventListener("scroll", update, { passive: true });
-    update();
-
-    return () => {
-      window.removeEventListener("scroll", update);
-    };
-  }, []);
-
-  const close = () => setMobileOpen(false);
-
-  return (
-    <>
-      <nav
-        className={`site-nav${scrolled ? " scrolled" : ""}${overHero ? " nav-over-hero" : ""}`}
-      >
-        <a href="#" className="nav-logo">
-          <Image
-            src="/alinx-logo.png"
-            alt="A-LINX Building Technologies"
-            width={120}
-            height={40}
-            style={{ width: "auto", height: "40px" }}
-            className="nav-logo-img"
-            priority
-          />
-        </a>
-        <ul className="nav-links">
-          <li><a href="#services">Services</a></li>
-          <li><a href="#process">Process</a></li>
-          <li><a href="#projects">Projects</a></li>
-          <li><a href="#team">Team</a></li>
-        </ul>
-        <a href="tel:2267247219" className="nav-cta">226-724-7219</a>
-        <button
-          className={`nav-hamburger${mobileOpen ? " open" : ""}`}
-          onClick={() => setMobileOpen((o) => !o)}
-          aria-label="Toggle menu"
-        >
-          <span /><span /><span />
-        </button>
-      </nav>
-
-      <nav className={`nav-mobile${mobileOpen ? " open" : ""}`}>
-        <a href="#services"    onClick={close}>Services</a>
-        <a href="#process"     onClick={close}>Process</a>
-        <a href="#projects"    onClick={close}>Projects</a>
-        <a href="#team"        onClick={close}>Team</a>
-        <a href="tel:2267247219" className="mobile-cta" onClick={close}>226-724-7219</a>
-      </nav>
-    </>
-  );
-}
+import Nav from "@/components/Nav";
+import SiteFooter from "@/components/SiteFooter";
 
 /* ─── STATS ─────────────────────────────────────── */
 const STATS = [
@@ -120,32 +50,31 @@ function Services() {
         <div className="svc-card svc-card--panelized reveal">
           <div className="svc-card-bg" aria-hidden>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/images/panelized.jpg"
-              alt=""
-              className="svc-card-photo"
-            />
+            <img src="/images/panelized.jpg" alt="" className="svc-card-photo" />
           </div>
           <div className="svc-card-inner">
-          <div className="svc-num">01 / PANELIZED</div>
-          <h3 className="svc-h3">Panelized<br />Components</h3>
-          <p className="svc-desc">
-            Interior and fully-finished exterior structural panels — engineered for
-            superstructure completion approximately 35% faster and costs typically 20%
-            lower versus conventional methods.
-          </p>
-          <div className="svc-kpi">
-            <span className="kpi-v">35%</span>
-            <span className="kpi-l">Faster Completion</span>
-          </div>
-          <ul className="svc-list">
-            <li>Pre-insulated exterior walls with air barrier and multiple finish options</li>
-            <li>Floor assemblies: composite decks, hollow-core plank, open web joists</li>
-            <li>Prefab load-bearing and wind-bearing structural panels</li>
-            <li>Pre-installed windows, doors and mechanical openings</li>
-            <li>Structural steel elements, lintels and slab shoring systems</li>
-            <li>Complete shop drawings and cast-in-place cores</li>
-          </ul>
+            <div className="svc-num">01 / PANELIZED</div>
+            <h3 className="svc-h3">Panelized<br />Components</h3>
+            <p className="svc-desc">
+              Interior and fully-finished exterior structural panels — engineered for
+              superstructure completion approximately 35% faster and costs typically 20%
+              lower versus conventional methods.
+            </p>
+            <div className="svc-kpi">
+              <span className="kpi-v">35%</span>
+              <span className="kpi-l">Faster Completion</span>
+            </div>
+            <ul className="svc-list">
+              <li>Pre-insulated exterior walls with air barrier and multiple finish options</li>
+              <li>Floor assemblies: composite decks, hollow-core plank, open web joists</li>
+              <li>Prefab load-bearing and wind-bearing structural panels</li>
+              <li>Pre-installed windows, doors and mechanical openings</li>
+              <li>Structural steel elements, lintels and slab shoring systems</li>
+              <li>Complete shop drawings and cast-in-place cores</li>
+            </ul>
+            <Link href="/panelized" className="svc-explore-link">
+              Explore Panelized →
+            </Link>
           </div>
         </div>
 
@@ -153,139 +82,31 @@ function Services() {
         <div className="svc-card svc-card--volumetric reveal d1">
           <div className="svc-card-bg" aria-hidden>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/images/volumetric.jpg?v=3"
-              alt=""
-              className="svc-card-photo svc-card-photo--zoom"
-            />
+            <img src="/images/volumetric.jpg?v=3" alt="" className="svc-card-photo svc-card-photo--zoom" />
           </div>
           <div className="svc-card-inner">
-          <div className="svc-num">02 / VOLUMETRIC</div>
-          <h3 className="svc-h3">Turnkey<br />Modular</h3>
-          <p className="svc-desc">
-            True volumetric structures via proprietary METALOQ technology — engineered
-            to manufacturing-sector tolerances, scalable from single ADUs to 20-storey
-            communities.
-          </p>
-          <div className="svc-kpi">
-            <span className="kpi-v">±0.01&quot;</span>
-            <span className="kpi-l">Frame Height Precision</span>
-          </div>
-          <ul className="svc-list">
-            <li>Meets National Building Code of Canada across all project types</li>
-            <li>Rapid deployment: urban, suburban, rural and remote locations</li>
-            <li>Standardized systems enable province-to-province rollout</li>
-            <li>In-house design, engineering, fabrication, transport and site build</li>
-            <li>Single-source accountability with consistent, predictable timelines</li>
-            <li>Flexible layouts and finishes without production delays</li>
-          </ul>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ─── PROCESS PLACEHOLDER ──────────────────────── */
-function Process() {
-  return (
-    <section id="process">
-      <div className="label-row" style={{ position: "absolute", top: "2rem", left: "6%", zIndex: 1 }}>
-        <div className="label-line" />
-        <span className="label-text">Structural Components</span>
-      </div>
-      <div className="process-coming">
-        <div className="process-coming-label">Coming Soon</div>
-        <h2 className="process-coming-h2">Factory<br />Sequence</h2>
-      </div>
-    </section>
-  );
-}
-
-/* ─── TECHNOLOGY ────────────────────────────────── */
-function Technology() {
-  const chartRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const fills = chartRef.current?.querySelectorAll<HTMLElement>(".wc-fill");
-    if (!fills) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          fills.forEach((el) => { el.style.width = (el.dataset.w ?? "0") + "%"; });
-          observer.disconnect();
-        }
-      },
-      { threshold: 0.3 }
-    );
-    observer.observe(chartRef.current!);
-    return () => observer.disconnect();
-  }, []);
-
-  return (
-    <section id="technology" className="section">
-      <div className="tech-layout">
-        {/* Left — video placeholder */}
-        <div className="tech-placeholder reveal">
-          <div className="tech-annot tr">
-            <span className="tech-annot-key">Height Precision</span>±0.01&quot;
-          </div>
-          <div className="tech-annot bl">
-            <span className="tech-annot-key">Length Precision</span>±0.03&quot;
-          </div>
-        </div>
-
-        {/* Right — specs */}
-        <div className="reveal d1">
-          <div className="label-row">
-            <div className="label-line" />
-            <span className="label-text">Proprietary Technology</span>
-          </div>
-          <h2 className="section-h2">
-            METALOQ<br />
-            <span style={{ fontSize: "0.5em", color: "var(--text2)", fontWeight: 500, letterSpacing: "0.06em" }}>
-              System
-            </span>
-          </h2>
-          <p className="section-desc">
-            Manufacturing-sector precision applied to building construction. Tolerances
-            typically reserved for aerospace and automotive — now standard in every
-            A-LINX structure.
-          </p>
-
-          <div className="spec-table">
-            {[
-              ["Frame Height Precision",  "±0.01\""],
-              ["Frame Length Precision",  "±0.03\""],
-              ["Certification Standard",  "CSA A277-16"],
-              ["Maximum Building Height", "20 Storeys"],
-              ["Primary Material",        "Light-Gauge Steel"],
-              ["QA System",              "Third-Party Audited"],
-            ].map(([name, val]) => (
-              <div key={name} className="spec-row">
-                <span className="spec-name">{name}</span>
-                <span className="spec-val">{val}</span>
-              </div>
-            ))}
-          </div>
-
-          <div className="weight-chart" ref={chartRef}>
-            <div className="wc-label-row">Floor System Weight (lbs/ft²)</div>
-            {[
-              { name: "ComSlab (A-LINX)", val: "55", w: "58", cls: "a" },
-              { name: "Cast-in-Place",    val: "95", w: "100", cls: "b" },
-              { name: "Precast",          val: "65", w: "68",  cls: "c" },
-            ].map((row) => (
-              <div key={row.name} className="wc-item">
-                <div className="wc-top">
-                  <span className="wc-name">{row.name}</span>
-                  <span className="wc-val">{row.val}</span>
-                </div>
-                <div className="wc-track">
-                  <div className={`wc-fill ${row.cls}`} data-w={row.w} style={{ width: 0 }} />
-                </div>
-              </div>
-            ))}
+            <div className="svc-num">02 / VOLUMETRIC</div>
+            <h3 className="svc-h3">Turnkey<br />Modular</h3>
+            <p className="svc-desc">
+              True volumetric structures via proprietary METALOQ technology — engineered
+              to manufacturing-sector tolerances, scalable from single ADUs to 20-storey
+              communities.
+            </p>
+            <div className="svc-kpi">
+              <span className="kpi-v">±0.01&quot;</span>
+              <span className="kpi-l">Frame Height Precision</span>
+            </div>
+            <ul className="svc-list">
+              <li>Meets National Building Code of Canada across all project types</li>
+              <li>Rapid deployment: urban, suburban, rural and remote locations</li>
+              <li>Standardized systems enable province-to-province rollout</li>
+              <li>In-house design, engineering, fabrication, transport and site build</li>
+              <li>Single-source accountability with consistent, predictable timelines</li>
+              <li>Flexible layouts and finishes without production delays</li>
+            </ul>
+            <Link href="/volumetric" className="svc-explore-link">
+              Explore Volumetric →
+            </Link>
           </div>
         </div>
       </div>
@@ -521,22 +342,6 @@ function CTA() {
   );
 }
 
-/* ─── FOOTER ────────────────────────────────────── */
-function Footer() {
-  return (
-    <footer>
-      <div className="footer-brand">A<span>-</span>LINX</div>
-      <ul className="footer-links">
-        <li><a href="#services">Services</a></li>
-        <li><a href="#process">Process</a></li>
-        <li><a href="#projects">Projects</a></li>
-        <li><a href="#team">Team</a></li>
-      </ul>
-      <div className="footer-copy">© 2025 A-LINX Building Technologies</div>
-    </footer>
-  );
-}
-
 /* ─── SCROLL REVEAL ─────────────────────────────── */
 function useScrollReveal() {
   useEffect(() => {
@@ -567,14 +372,13 @@ export default function Home() {
       <ScrollScrubHero />
       <Stats />
       <Services />
-      <Process />
       <Advantages />
       <Steel />
       <Projects />
       <Certs />
       <Team />
       <CTA />
-      <Footer />
+      <SiteFooter />
     </>
   );
 }
