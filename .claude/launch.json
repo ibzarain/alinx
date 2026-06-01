@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "alinx-next",
+      "runtimeExecutable": "wsl",
+      "runtimeArgs": ["bash", "-c", "cd /home/ibz-arain/Dev/alinx && npm run dev -- --port 3010"],
+      "port": 3010
+    }
+  ]
+}
