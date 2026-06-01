@@ -11,40 +11,23 @@ function Nav() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
-    const update = (heroProgress = 0) => {
+    const update = () => {
       const y = window.scrollY;
-      const engaged = y > 20 || heroProgress > 0.05;
-      setScrolled(engaged);
-      setOverHero(!engaged && y < 80);
-    };
-
-    const onScroll = () => {
       const hero = document.getElementById("hero");
-      let heroProgress = 0;
-      if (hero && !hero.classList.contains("scroll-hero-reduced")) {
-        const scrollable = hero.offsetHeight - window.innerHeight;
-        if (scrollable > 0) {
-          heroProgress = Math.min(
-            1,
-            Math.max(0, -hero.getBoundingClientRect().top / scrollable)
-          );
-        }
-      }
-      update(heroProgress);
+      // Hero canvas is sticky and visible until the section fully scrolls off.
+      // Keep nav dark while any part of the hero section is still in the viewport.
+      const heroShowing = hero
+        ? hero.getBoundingClientRect().bottom > 0
+        : y < window.innerHeight;
+      setOverHero(heroShowing);
+      setScrolled(!heroShowing);
     };
 
-    const onHeroProgress = (e: Event) => {
-      const { progress } = (e as CustomEvent<{ progress: number }>).detail;
-      update(progress);
-    };
-
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("hero-scrub-progress", onHeroProgress);
-    onScroll();
+    window.addEventListener("scroll", update, { passive: true });
+    update();
 
     return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("hero-scrub-progress", onHeroProgress);
+      window.removeEventListener("scroll", update);
     };
   }, []);
 
@@ -69,7 +52,6 @@ function Nav() {
         <ul className="nav-links">
           <li><a href="#services">Services</a></li>
           <li><a href="#process">Process</a></li>
-          <li><a href="#technology">Technology</a></li>
           <li><a href="#projects">Projects</a></li>
           <li><a href="#team">Team</a></li>
         </ul>
@@ -86,7 +68,6 @@ function Nav() {
       <nav className={`nav-mobile${mobileOpen ? " open" : ""}`}>
         <a href="#services"    onClick={close}>Services</a>
         <a href="#process"     onClick={close}>Process</a>
-        <a href="#technology"  onClick={close}>Technology</a>
         <a href="#projects"    onClick={close}>Projects</a>
         <a href="#team"        onClick={close}>Team</a>
         <a href="tel:2267247219" className="mobile-cta" onClick={close}>226-724-7219</a>
@@ -237,13 +218,14 @@ function Services() {
 /* ─── PROCESS PLACEHOLDER ──────────────────────── */
 function Process() {
   return (
-    <section
-      id="process"
-      style={{ background: "#000", height: "100vh", position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}
-    >
-      <div className="label-row" style={{ position: "absolute", top: "2rem", left: "6%" }}>
+    <section id="process">
+      <div className="label-row" style={{ position: "absolute", top: "2rem", left: "6%", zIndex: 1 }}>
         <div className="label-line" />
         <span className="label-text">Structural Components</span>
+      </div>
+      <div className="process-coming">
+        <div className="process-coming-label">Coming Soon</div>
+        <h2 className="process-coming-h2">Factory<br />Sequence</h2>
       </div>
     </section>
   );
@@ -576,8 +558,8 @@ function Footer() {
       <ul className="footer-links">
         <li><a href="#services">Services</a></li>
         <li><a href="#process">Process</a></li>
-        <li><a href="#technology">Technology</a></li>
         <li><a href="#projects">Projects</a></li>
+        <li><a href="#team">Team</a></li>
       </ul>
       <div className="footer-copy">© 2025 A-LINX Building Technologies</div>
     </footer>
@@ -616,7 +598,6 @@ export default function Home() {
       <Stats />
       <Services />
       <Process />
-      <Technology />
       <Advantages />
       <Steel />
       <Projects />
