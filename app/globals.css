@@ -145,7 +145,7 @@ nav.site-nav.nav-over-hero .nav-hamburger span { background: #fff; }
 /* ─── HERO (scroll-scrub) ──────────────────────── */
 #hero.scroll-hero {
   position: relative;
-  height: 300vh;
+  height: 360vh;
   background: #08090e;
 }
 
@@ -990,7 +990,7 @@ footer {
   .team-grid { grid-template-columns: repeat(2,1fr); }
   .adv-grid { grid-template-columns: repeat(2,1fr); }
   .stats-strip { grid-template-columns: repeat(2,1fr); }
-  #hero.scroll-hero { height: 250vh; }
+  #hero.scroll-hero { height: 285vh; }
   .hero-content { top: 14%; left: 5%; max-width: 92%; }
   .hero-h1 { font-size: clamp(2.5rem, 10vw, 4rem); }
   .steel-features { grid-template-columns: 1fr; }

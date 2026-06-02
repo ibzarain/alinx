@@ -1,33 +1,48 @@
 "use client";
 
+import {
+  compositeHorizontalReveal,
+  createOffscreenLayers,
+  mapScrollToTransition,
+  resizeOffscreenLayers,
+  type OffscreenLayers,
+} from "@/lib/scroll-composite";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-type HeroManifest = {
-  fps: number;
-  frameCount: number;
-  pattern: string;
-  width: number;
-  height: number;
-  cacheKey?: string;
-};
+const STEP_COUNT = 5;
+const STEP_SRC = (n: number) => `/steps/step${n}.png`;
 
 const PHASES = [
+  "Foundation",
   "Steel Skeleton",
   "Facade Panels",
   "Glass Facade",
   "Site Complete",
 ] as const;
 
-const SCROLL_HEIGHT_VH = 300;
-const HEADLINE_FADE_END = 0.2;
+const SCROLL_HEIGHT_VH = 360;
+const HEADLINE_FADE_END = 0.18;
+/** Feather as a fraction of viewport width (logical px). */
+const FEATHER_WIDTH_RATIO = 0.055;
+/** Subtle highlight at wipe edge (separate from the mask). */
+const ENABLE_EDGE_GLOW = true;
+const EDGE_GLOW_OPACITY = 0.06;
 
-/** Map scrub progress to 0–1 over the phase section only (after headline fades) */
+function stepSrc(index: number) {
+  return STEP_SRC(index + 1);
+}
+
+function clamp(n: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, n));
+}
+
+/** Map scrub progress to 0–1 over the phase section only (after headline fades). */
 function phaseScrollProgress(progress: number) {
   if (progress <= HEADLINE_FADE_END) return 0;
   return (progress - HEADLINE_FADE_END) / (1 - HEADLINE_FADE_END);
 }
 
-/** Hold full opacity most of each segment; short fades at edges only */
+/** Hold full opacity most of each segment; short fades at edges only. */
 function phaseWordOpacity(phaseIndex: number, phaseProgress: number) {
   const n = PHASES.length;
   const seg = 1 / n;
@@ -45,122 +60,104 @@ function phaseWordOpacity(phaseIndex: number, phaseProgress: number) {
   return 1;
 }
 
-function clamp(n: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, n));
-}
-
-function frameSrc(index: number, cacheKey: string) {
-  const n = String(index + 1).padStart(4, "0");
-  const q = cacheKey ? `?v=${encodeURIComponent(cacheKey)}` : "";
-  return `/hero/frames/frame_${n}.jpg${q}`;
-}
-
-function drawCover(
-  ctx: CanvasRenderingContext2D,
-  img: HTMLImageElement,
-  cw: number,
-  ch: number
-) {
-  const ir = img.naturalWidth / img.naturalHeight;
-  const cr = cw / ch;
-  let sw: number;
-  let sh: number;
-  let sx: number;
-  let sy: number;
-
-  if (ir > cr) {
-    sh = img.naturalHeight;
-    sw = sh * cr;
-    sx = (img.naturalWidth - sw) / 2;
-    sy = 0;
-  } else {
-    sw = img.naturalWidth;
-    sh = sw / cr;
-    sx = 0;
-    sy = (img.naturalHeight - sh) / 2;
-  }
-
-  ctx.drawImage(img, sx, sy, sw, sh, 0, 0, cw, ch);
+function getDpr(): number {
+  return Math.min(window.devicePixelRatio || 1, 2.5);
 }
 
 export default function ScrollScrubHero() {
   const containerRef = useRef<HTMLElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const framesRef = useRef<HTMLImageElement[]>([]);
-  const lastFrameRef = useRef(-1);
+  const imagesRef = useRef<HTMLImageElement[]>([]);
+  const layersRef = useRef<OffscreenLayers | null>(null);
+  const lastDrawKeyRef = useRef("");
   const rafRef = useRef<number | null>(null);
 
-  const [manifest, setManifest] = useState<HeroManifest | null>(null);
   const [ready, setReady] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [progress, setProgress] = useState(0);
   const [headlineOpacity, setHeadlineOpacity] = useState(1);
 
-  const frameCount = manifest?.frameCount ?? 0;
-  const cacheKey =
-    manifest?.cacheKey ?? (manifest ? String(manifest.frameCount) : "");
+  const drawScene = useCallback(
+    (fromIndex: number, toIndex: number, blend: number) => {
+      const canvas = canvasRef.current;
+      const images = imagesRef.current;
+      const from = images[fromIndex];
+      const to = images[toIndex];
+      if (!canvas || !from?.complete || !from.naturalWidth) return;
 
-  const drawFrame = useCallback((index: number) => {
-    const canvas = canvasRef.current;
-    const img = framesRef.current[index];
-    if (!canvas || !img?.complete || !img.naturalWidth) return;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
 
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+      const dpr = getDpr();
+      const w = canvas.clientWidth;
+      const h = canvas.clientHeight;
+      if (w === 0 || h === 0) return;
 
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = "high";
+      const drawKey = `${w}x${h}@${dpr}:${fromIndex}-${toIndex}:${blend.toFixed(4)}`;
+      if (drawKey === lastDrawKeyRef.current) return;
+      lastDrawKeyRef.current = drawKey;
 
-    const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
-    const w = canvas.clientWidth;
-    const h = canvas.clientHeight;
-    if (w === 0 || h === 0) return;
+      if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) {
+        canvas.width = Math.round(w * dpr);
+        canvas.height = Math.round(h * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
 
-    if (canvas.width !== w * dpr || canvas.height !== h * dpr) {
-      canvas.width = w * dpr;
-      canvas.height = h * dpr;
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    }
+      let layers = layersRef.current;
+      if (!layers) {
+        layers = createOffscreenLayers();
+        layersRef.current = layers;
+      }
+      if (!layers) return;
 
-    if (lastFrameRef.current === index) return;
-    lastFrameRef.current = index;
-    drawCover(ctx, img, w, h);
-  }, []);
+      resizeOffscreenLayers(layers, w, h, dpr);
+
+      const featherPx = Math.max(24, w * FEATHER_WIDTH_RATIO);
+
+      if (blend <= 0 || fromIndex === toIndex) {
+        compositeHorizontalReveal(ctx, from, from, w, h, 0, layers, {
+          featherPx,
+        });
+        return;
+      }
+
+      const incoming = to?.complete && to.naturalWidth ? to : from;
+      compositeHorizontalReveal(ctx, from, incoming, w, h, blend, layers, {
+        featherPx,
+        edgeGlow: ENABLE_EDGE_GLOW,
+        edgeGlowOpacity: EDGE_GLOW_OPACITY,
+      });
+    },
+    []
+  );
 
   const updateFromScroll = useCallback(() => {
     const container = containerRef.current;
-    if (!container || reducedMotion || frameCount < 1) return;
+    if (!container || !ready) return;
 
     const rect = container.getBoundingClientRect();
     const scrollable = container.offsetHeight - window.innerHeight;
-    const p =
-      scrollable <= 0 ? 0 : clamp(-rect.top / scrollable, 0, 1);
-
-    const frameIndex = Math.round(p * (frameCount - 1));
-    drawFrame(frameIndex);
+    const p = scrollable <= 0 ? 0 : clamp(-rect.top / scrollable, 0, 1);
 
     setProgress(p);
     setHeadlineOpacity(1 - clamp(p / HEADLINE_FADE_END, 0, 1));
 
+    if (reducedMotion) {
+      drawScene(0, 0, 0);
+      return;
+    }
+
+    const phaseP = phaseScrollProgress(p);
+    const { fromIndex, toIndex, blend } = mapScrollToTransition(
+      phaseP,
+      STEP_COUNT
+    );
+    drawScene(fromIndex, toIndex, blend);
+
     window.dispatchEvent(
       new CustomEvent("hero-scrub-progress", { detail: { progress: p } })
     );
-  }, [drawFrame, frameCount, reducedMotion]);
-
-  useEffect(() => {
-    let cancelled = false;
-    fetch("/hero/frames/manifest.json", { cache: "no-store" })
-      .then((r) => r.json())
-      .then((data: HeroManifest) => {
-        if (!cancelled) setManifest(data);
-      })
-      .catch(() => {
-        if (!cancelled) setManifest(null);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  }, [drawScene, ready, reducedMotion]);
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -171,29 +168,25 @@ export default function ScrollScrubHero() {
   }, []);
 
   useEffect(() => {
-    if (!manifest || frameCount < 1) return;
-
     setReady(false);
-    framesRef.current = [];
-    lastFrameRef.current = -1;
+    imagesRef.current = [];
+    lastDrawKeyRef.current = "";
 
     const images: HTMLImageElement[] = [];
     let loaded = 0;
 
     const onLoad = () => {
       loaded += 1;
-      if (loaded >= frameCount) {
-        framesRef.current = images;
+      if (loaded >= STEP_COUNT) {
+        imagesRef.current = images;
         setReady(true);
-        drawFrame(0);
-        updateFromScroll();
       }
     };
 
-    for (let i = 0; i < frameCount; i++) {
+    for (let i = 0; i < STEP_COUNT; i++) {
       const img = new Image();
       img.decoding = "async";
-      img.src = frameSrc(i, cacheKey);
+      img.src = stepSrc(i);
       img.onload = onLoad;
       img.onerror = onLoad;
       images.push(img);
@@ -205,14 +198,13 @@ export default function ScrollScrubHero() {
         img.onerror = null;
       });
     };
-  }, [manifest, cacheKey, frameCount, drawFrame, updateFromScroll]);
+  }, []);
 
   useEffect(() => {
-    if (reducedMotion) {
-      const img = framesRef.current[0];
-      if (img?.complete) drawFrame(0);
-      return;
-    }
+    if (!ready) return;
+
+    drawScene(0, 0, 0);
+    updateFromScroll();
 
     const onScroll = () => {
       if (rafRef.current != null) return;
@@ -223,20 +215,19 @@ export default function ScrollScrubHero() {
     };
 
     const onResize = () => {
-      lastFrameRef.current = -1;
+      lastDrawKeyRef.current = "";
       updateFromScroll();
     };
 
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onResize);
-    updateFromScroll();
 
     return () => {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onResize);
       if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
     };
-  }, [reducedMotion, updateFromScroll, drawFrame, ready]);
+  }, [ready, updateFromScroll, drawScene]);
 
   const phaseProgress = phaseScrollProgress(progress);
   const phaseStageVisible = phaseProgress > 0;
