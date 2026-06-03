@@ -300,6 +300,21 @@ nav.site-nav.nav-over-hero .nav-hamburger span { background: #fff; }
   }
 }
 
+.hero-scroll-truck-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 10001;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.hero-scroll-truck {
+  position: absolute;
+  left: 0;
+  max-width: none;
+  will-change: transform;
+}
+
 .hero-scrub-progress {
   position: absolute;
   bottom: 2.5rem;

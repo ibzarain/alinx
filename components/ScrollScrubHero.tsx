@@ -3,8 +3,10 @@
 import {
   compositeHorizontalReveal,
   createOffscreenLayers,
+  getCoverLayout,
   mapScrollToTransition,
   resizeOffscreenLayers,
+  type CoverLayout,
   type OffscreenLayers,
 } from "@/lib/scroll-composite";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -27,6 +29,8 @@ const FEATHER_WIDTH_RATIO = 0.055;
 /** Subtle highlight at wipe edge (separate from the mask). */
 const ENABLE_EDGE_GLOW = true;
 const EDGE_GLOW_OPACITY = 0.06;
+/** Push truck down so the bottom clips off-screen. */
+const TRUCK_DROP = "clamp(56px, 11vh, 148px)";
 
 function stepSrc(index: number) {
   return STEP_SRC(index + 1);
@@ -71,6 +75,29 @@ export default function ScrollScrubHero() {
   const layersRef = useRef<OffscreenLayers | null>(null);
   const lastDrawKeyRef = useRef("");
   const rafRef = useRef<number | null>(null);
+
+  const truckLayerRef = useRef<HTMLDivElement>(null);
+  const truckRef = useRef<HTMLImageElement>(null);
+  const [truckLayout, setTruckLayout] = useState<CoverLayout>({
+    drawWidth: 0,
+    drawHeight: 0,
+    top: 0,
+    travel: 0,
+  });
+
+  const measureTruckLayout = useCallback(() => {
+    const layer = truckLayerRef.current;
+    const img = truckRef.current;
+    if (!layer || !img?.naturalWidth) return;
+
+    const layout = getCoverLayout(
+      img.naturalWidth,
+      img.naturalHeight,
+      layer.clientWidth,
+      layer.clientHeight
+    );
+    setTruckLayout(layout);
+  }, []);
 
   const [ready, setReady] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
@@ -216,6 +243,7 @@ export default function ScrollScrubHero() {
 
     const onResize = () => {
       lastDrawKeyRef.current = "";
+      measureTruckLayout();
       updateFromScroll();
     };
 
@@ -227,7 +255,16 @@ export default function ScrollScrubHero() {
       window.removeEventListener("resize", onResize);
       if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
     };
-  }, [ready, updateFromScroll, drawScene]);
+  }, [ready, updateFromScroll, drawScene, measureTruckLayout]);
+
+  useEffect(() => {
+    measureTruckLayout();
+    const layer = truckLayerRef.current;
+    if (!layer || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(measureTruckLayout);
+    ro.observe(layer);
+    return () => ro.disconnect();
+  }, [measureTruckLayout]);
 
   const phaseProgress = phaseScrollProgress(progress);
   const phaseStageVisible = phaseProgress > 0;
@@ -235,6 +272,11 @@ export default function ScrollScrubHero() {
   const sectionStyle = reducedMotion
     ? undefined
     : ({ height: `${SCROLL_HEIGHT_VH}vh` } as React.CSSProperties);
+
+  const truckViewportW =
+    truckLayerRef.current?.clientWidth || truckLayout.drawWidth || 1;
+  /** Enter off-screen left → exit off-screen right across full hero scroll. */
+  const truckSlidePx = truckViewportW * (2 * progress - 1);
 
   return (
     <section
@@ -306,10 +348,20 @@ export default function ScrollScrubHero() {
         </div>
 
         {!reducedMotion && (
-          <div className="hero-scrub-progress" aria-hidden>
-            <div
-              className="hero-scrub-progress-fill"
-              style={{ transform: `scaleX(${progress})` }}
+          <div ref={truckLayerRef} className="hero-scroll-truck-layer" aria-hidden>
+            <img
+              ref={truckRef}
+              src="/truck.png"
+              alt=""
+              className="hero-scroll-truck"
+              draggable={false}
+              onLoad={measureTruckLayout}
+              style={{
+                width: truckLayout.drawWidth || undefined,
+                height: truckLayout.drawHeight || undefined,
+                top: truckLayout.top,
+                transform: `translate(${truckSlidePx}px, ${TRUCK_DROP})`,
+              }}
             />
           </div>
         )}
