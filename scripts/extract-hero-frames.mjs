@@ -1,12 +1,13 @@
 #!/usr/bin/env node
 /**
- * Extract 10fps JPG frames from public/hero/video.mp4 for scroll-scrub hero.
- * Re-run when video.mp4 changes, then commit public/hero/frames/.
+ * Extract JPG frames from public/building.mp4 for scroll-scrub hero.
+ * Re-run when building.mp4 changes, then commit public/hero/frames/.
  * Requires: ffmpeg (apt install ffmpeg)
  *
  * Env:
+ *   HERO_FRAME_FPS — extraction rate (default: 5, fewer = faster scroll scrub)
  *   HERO_FRAME_WIDTH — max width (default: source width, capped at 1920)
- *   HERO_JPEG_QUALITY — mjpeg q:v 2–31, lower = better (default: 2)
+ *   HERO_JPEG_QUALITY — mjpeg q:v 2–31, lower = better (default: 3)
  */
 import { execSync } from "child_process";
 import fs from "fs";
@@ -15,12 +16,16 @@ import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(__dirname, "..");
-const videoPath = path.join(root, "public/hero/video.mp4");
+const videoPath = path.join(root, "public/building.mp4");
 const outDir = path.join(root, "public/hero/frames");
 
+const frameFps = Math.min(
+  30,
+  Math.max(1, Number(process.env.HERO_FRAME_FPS) || 5)
+);
 const jpegQuality = Math.min(
   31,
-  Math.max(2, Number(process.env.HERO_JPEG_QUALITY) || 2)
+  Math.max(2, Number(process.env.HERO_JPEG_QUALITY) || 3)
 );
 
 if (!fs.existsSync(videoPath)) {
@@ -51,8 +56,8 @@ if (targetHeight % 2 !== 0) targetHeight += 1;
 
 const scaleFilter =
   targetWidth < sourceWidth
-    ? `fps=10,scale=${targetWidth}:${targetHeight}:flags=lanczos`
-    : "fps=10";
+    ? `fps=${frameFps},scale=${targetWidth}:${targetHeight}:flags=lanczos`
+    : `fps=${frameFps}`;
 
 fs.mkdirSync(outDir, { recursive: true });
 
@@ -63,7 +68,7 @@ for (const f of fs.readdirSync(outDir)) {
 }
 
 console.log(
-  `Extracting frames at 10fps (${targetWidth}x${targetHeight}, JPEG q:v ${jpegQuality})...`
+  `Extracting frames at ${frameFps}fps (${targetWidth}x${targetHeight}, JPEG q:v ${jpegQuality})...`
 );
 execSync(
   `ffmpeg -y -i "${videoPath}" -vf "${scaleFilter}" -q:v ${jpegQuality} "${path.join(outDir, "frame_%04d.jpg")}"`,
@@ -82,7 +87,7 @@ if (frames.length === 0) {
 
 const videoStat = fs.statSync(videoPath);
 const manifest = {
-  fps: 10,
+  fps: frameFps,
   frameCount: frames.length,
   pattern: "/hero/frames/frame_%04d.jpg",
   width: targetWidth,

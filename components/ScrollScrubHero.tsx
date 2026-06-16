@@ -1,161 +1,168 @@
 "use client";
 
-import {
-  compositeHorizontalReveal,
-  createOffscreenLayers,
-  getCoverLayout,
-  mapScrollToTransition,
-  resizeOffscreenLayers,
-  type CoverLayout,
-  type OffscreenLayers,
-} from "@/lib/scroll-composite";
+import { drawCover } from "@/lib/scroll-composite";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-const STEP_COUNT = 5;
-const STEP_SRC = (n: number) => `/steps/step${n}.png`;
+type FrameManifest = {
+  fps: number;
+  frameCount: number;
+  pattern: string;
+  width: number;
+  height: number;
+  cacheKey: string;
+};
+
+const VIDEO_SRC = "/building.mp4";
+const MANIFEST_PATH = "/hero/frames/manifest.json";
 
 const PHASES = [
-  "Foundation",
-  "Steel Skeleton",
-  "Facade Panels",
-  "Glass Facade",
-  "Site Complete",
+  { label: "Foundation", span: 2 },
+  { label: "Facade Panels", span: 1 },
+  { label: "Glass Facade", span: 1 },
+  { label: "Site Complete", span: 1 },
 ] as const;
 
-const SCROLL_HEIGHT_VH = 360;
+const SCROLL_HEIGHT_VH = 240;
 const HEADLINE_FADE_END = 0.18;
-/** Feather as a fraction of viewport width (logical px). */
-const FEATHER_WIDTH_RATIO = 0.055;
-/** Subtle highlight at wipe edge (separate from the mask). */
-const ENABLE_EDGE_GLOW = true;
-const EDGE_GLOW_OPACITY = 0.06;
-/** Push truck down so the bottom clips off-screen. */
-const TRUCK_DROP = "clamp(56px, 11vh, 148px)";
-
-function stepSrc(index: number) {
-  return STEP_SRC(index + 1);
-}
 
 function clamp(n: number, min: number, max: number) {
   return Math.min(max, Math.max(min, n));
 }
 
-/** Map scrub progress to 0–1 over the phase section only (after headline fades). */
+function frameSrc(pattern: string, index: number) {
+  const n = String(index + 1).padStart(4, "0");
+  return pattern.replace("%04d", n);
+}
+
 function phaseScrollProgress(progress: number) {
   if (progress <= HEADLINE_FADE_END) return 0;
   return (progress - HEADLINE_FADE_END) / (1 - HEADLINE_FADE_END);
 }
 
-/** Hold full opacity most of each segment; short fades at edges only. */
+function phaseSegmentBounds(phaseIndex: number) {
+  const totalSpan = PHASES.reduce((sum, p) => sum + p.span, 0);
+  let cursor = 0;
+  for (let i = 0; i < PHASES.length; i++) {
+    const seg = PHASES[i].span / totalSpan;
+    const start = cursor;
+    const end = cursor + seg;
+    if (i === phaseIndex) return { start, end, seg };
+    cursor = end;
+  }
+  return { start: 0, end: 0, seg: 0 };
+}
+
 function phaseWordOpacity(phaseIndex: number, phaseProgress: number) {
-  const n = PHASES.length;
-  const seg = 1 / n;
-  const start = phaseIndex * seg;
-  const end = start + seg;
+  const { start, end, seg } = phaseSegmentBounds(phaseIndex);
   const edge = seg * 0.12;
 
   if (phaseProgress < start || phaseProgress > end) return 0;
-  if (phaseProgress < start + edge) {
-    return (phaseProgress - start) / edge;
-  }
-  if (phaseProgress > end - edge) {
-    return (end - phaseProgress) / edge;
-  }
+  if (phaseProgress < start + edge) return (phaseProgress - start) / edge;
+  if (phaseProgress > end - edge) return (end - phaseProgress) / edge;
   return 1;
+}
+
+function mapProgressToFrame(progress: number, frameCount: number) {
+  const p = clamp(progress, 0, 1);
+  return Math.min(frameCount - 1, Math.round(p * (frameCount - 1)));
 }
 
 function getDpr(): number {
   return Math.min(window.devicePixelRatio || 1, 2.5);
 }
 
+type ScrubMode = "frames" | "video";
+
 export default function ScrollScrubHero() {
   const containerRef = useRef<HTMLElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const imagesRef = useRef<HTMLImageElement[]>([]);
-  const layersRef = useRef<OffscreenLayers | null>(null);
+  const manifestRef = useRef<FrameManifest | null>(null);
+  const modeRef = useRef<ScrubMode>("video");
   const lastDrawKeyRef = useRef("");
   const rafRef = useRef<number | null>(null);
-
-  const truckLayerRef = useRef<HTMLDivElement>(null);
-  const truckRef = useRef<HTMLImageElement>(null);
-  const [truckLayout, setTruckLayout] = useState<CoverLayout>({
-    drawWidth: 0,
-    drawHeight: 0,
-    top: 0,
-    travel: 0,
-  });
-
-  const measureTruckLayout = useCallback(() => {
-    const layer = truckLayerRef.current;
-    const img = truckRef.current;
-    if (!layer || !img?.naturalWidth) return;
-
-    const layout = getCoverLayout(
-      img.naturalWidth,
-      img.naturalHeight,
-      layer.clientWidth,
-      layer.clientHeight
-    );
-    setTruckLayout(layout);
-  }, []);
 
   const [ready, setReady] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [progress, setProgress] = useState(0);
   const [headlineOpacity, setHeadlineOpacity] = useState(1);
 
-  const drawScene = useCallback(
-    (fromIndex: number, toIndex: number, blend: number) => {
-      const canvas = canvasRef.current;
-      const images = imagesRef.current;
-      const from = images[fromIndex];
-      const to = images[toIndex];
-      if (!canvas || !from?.complete || !from.naturalWidth) return;
+  const drawImage = useCallback((source: CanvasImageSource, key: string) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
 
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
 
-      const dpr = getDpr();
-      const w = canvas.clientWidth;
-      const h = canvas.clientHeight;
-      if (w === 0 || h === 0) return;
+    const dpr = getDpr();
+    const w = canvas.clientWidth;
+    const h = canvas.clientHeight;
+    if (w === 0 || h === 0) return;
 
-      const drawKey = `${w}x${h}@${dpr}:${fromIndex}-${toIndex}:${blend.toFixed(4)}`;
-      if (drawKey === lastDrawKeyRef.current) return;
-      lastDrawKeyRef.current = drawKey;
+    if (key === lastDrawKeyRef.current) return;
+    lastDrawKeyRef.current = key;
 
-      if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) {
-        canvas.width = Math.round(w * dpr);
-        canvas.height = Math.round(h * dpr);
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      }
+    if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) {
+      canvas.width = Math.round(w * dpr);
+      canvas.height = Math.round(h * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
 
-      let layers = layersRef.current;
-      if (!layers) {
-        layers = createOffscreenLayers();
-        layersRef.current = layers;
-      }
-      if (!layers) return;
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
 
-      resizeOffscreenLayers(layers, w, h, dpr);
+    if (source instanceof HTMLImageElement) {
+      drawCover(ctx, source, w, h);
+      return;
+    }
 
-      const featherPx = Math.max(24, w * FEATHER_WIDTH_RATIO);
+    const video = source as HTMLVideoElement;
+    const ir = video.videoWidth / video.videoHeight;
+    const cr = w / h;
+    let sw: number;
+    let sh: number;
+    let sx: number;
+    let sy: number;
 
-      if (blend <= 0 || fromIndex === toIndex) {
-        compositeHorizontalReveal(ctx, from, from, w, h, 0, layers, {
-          featherPx,
-        });
-        return;
-      }
+    if (ir > cr) {
+      sh = video.videoHeight;
+      sw = sh * cr;
+      sx = (video.videoWidth - sw) / 2;
+      sy = 0;
+    } else {
+      sw = video.videoWidth;
+      sh = sw / cr;
+      sx = 0;
+      sy = (video.videoHeight - sh) / 2;
+    }
 
-      const incoming = to?.complete && to.naturalWidth ? to : from;
-      compositeHorizontalReveal(ctx, from, incoming, w, h, blend, layers, {
-        featherPx,
-        edgeGlow: ENABLE_EDGE_GLOW,
-        edgeGlowOpacity: EDGE_GLOW_OPACITY,
-      });
+    ctx.drawImage(video, sx, sy, sw, sh, 0, 0, w, h);
+  }, []);
+
+  const drawFrame = useCallback(
+    (frameIndex: number) => {
+      const img = imagesRef.current[frameIndex];
+      if (!img?.complete || !img.naturalWidth) return;
+      drawImage(img, `frame:${frameIndex}`);
     },
-    []
+    [drawImage]
+  );
+
+  const seekVideo = useCallback(
+    (phaseP: number) => {
+      const video = videoRef.current;
+      if (!video || !video.duration) return;
+
+      const target = phaseP * video.duration;
+      if (Math.abs(video.currentTime - target) > 0.02) {
+        video.currentTime = target;
+      }
+      if (video.readyState >= 2) {
+        drawImage(video, `video:${target.toFixed(3)}`);
+      }
+    },
+    [drawImage]
   );
 
   const updateFromScroll = useCallback(() => {
@@ -169,22 +176,24 @@ export default function ScrollScrubHero() {
     setProgress(p);
     setHeadlineOpacity(1 - clamp(p / HEADLINE_FADE_END, 0, 1));
 
+    const phaseP = phaseScrollProgress(p);
+
     if (reducedMotion) {
-      drawScene(0, 0, 0);
+      if (modeRef.current === "frames") drawFrame(0);
+      else seekVideo(0);
       return;
     }
 
-    const phaseP = phaseScrollProgress(p);
-    const { fromIndex, toIndex, blend } = mapScrollToTransition(
-      phaseP,
-      STEP_COUNT
-    );
-    drawScene(fromIndex, toIndex, blend);
+    if (modeRef.current === "frames" && manifestRef.current) {
+      drawFrame(mapProgressToFrame(phaseP, manifestRef.current.frameCount));
+    } else {
+      seekVideo(phaseP);
+    }
 
     window.dispatchEvent(
       new CustomEvent("hero-scrub-progress", { detail: { progress: p } })
     );
-  }, [drawScene, ready, reducedMotion]);
+  }, [drawFrame, ready, reducedMotion, seekVideo]);
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -195,32 +204,87 @@ export default function ScrollScrubHero() {
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
+
     setReady(false);
     imagesRef.current = [];
+    manifestRef.current = null;
+    modeRef.current = "video";
     lastDrawKeyRef.current = "";
 
-    const images: HTMLImageElement[] = [];
-    let loaded = 0;
+    async function loadFrames(): Promise<boolean> {
+      try {
+        const res = await fetch(MANIFEST_PATH);
+        if (!res.ok) return false;
+        const manifest = (await res.json()) as FrameManifest;
+        if (!manifest.frameCount || cancelled) return false;
 
-    const onLoad = () => {
-      loaded += 1;
-      if (loaded >= STEP_COUNT) {
+        const images: HTMLImageElement[] = new Array(manifest.frameCount);
+        let loaded = 0;
+
+        await new Promise<void>((resolve) => {
+          const onDone = () => {
+            loaded += 1;
+            if (loaded >= manifest.frameCount) resolve();
+          };
+
+          for (let i = 0; i < manifest.frameCount; i++) {
+            const img = new Image();
+            img.decoding = "async";
+            img.src = frameSrc(manifest.pattern, i);
+            img.onload = onDone;
+            img.onerror = onDone;
+            images[i] = img;
+          }
+        });
+
+        if (cancelled) return false;
+        manifestRef.current = manifest;
         imagesRef.current = images;
-        setReady(true);
+        modeRef.current = "frames";
+        return true;
+      } catch {
+        return false;
       }
-    };
-
-    for (let i = 0; i < STEP_COUNT; i++) {
-      const img = new Image();
-      img.decoding = "async";
-      img.src = stepSrc(i);
-      img.onload = onLoad;
-      img.onerror = onLoad;
-      images.push(img);
     }
 
+    function loadVideo(): Promise<void> {
+      return new Promise((resolve) => {
+        const video = videoRef.current;
+        if (!video) {
+          resolve();
+          return;
+        }
+
+        const onReady = () => {
+          video.removeEventListener("loadeddata", onReady);
+          video.removeEventListener("error", onReady);
+          resolve();
+        };
+
+        video.addEventListener("loadeddata", onReady);
+        video.addEventListener("error", onReady);
+        video.load();
+      });
+    }
+
+    async function init() {
+      const hasFrames = await loadFrames();
+      if (cancelled) return;
+
+      if (!hasFrames) {
+        modeRef.current = "video";
+        await loadVideo();
+      }
+
+      if (!cancelled) setReady(true);
+    }
+
+    init();
+
     return () => {
-      images.forEach((img) => {
+      cancelled = true;
+      imagesRef.current.forEach((img) => {
         img.onload = null;
         img.onerror = null;
       });
@@ -230,7 +294,6 @@ export default function ScrollScrubHero() {
   useEffect(() => {
     if (!ready) return;
 
-    drawScene(0, 0, 0);
     updateFromScroll();
 
     const onScroll = () => {
@@ -243,7 +306,6 @@ export default function ScrollScrubHero() {
 
     const onResize = () => {
       lastDrawKeyRef.current = "";
-      measureTruckLayout();
       updateFromScroll();
     };
 
@@ -255,16 +317,7 @@ export default function ScrollScrubHero() {
       window.removeEventListener("resize", onResize);
       if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
     };
-  }, [ready, updateFromScroll, drawScene, measureTruckLayout]);
-
-  useEffect(() => {
-    measureTruckLayout();
-    const layer = truckLayerRef.current;
-    if (!layer || typeof ResizeObserver === "undefined") return;
-    const ro = new ResizeObserver(measureTruckLayout);
-    ro.observe(layer);
-    return () => ro.disconnect();
-  }, [measureTruckLayout]);
+  }, [ready, updateFromScroll]);
 
   const phaseProgress = phaseScrollProgress(progress);
   const phaseStageVisible = phaseProgress > 0;
@@ -272,11 +325,6 @@ export default function ScrollScrubHero() {
   const sectionStyle = reducedMotion
     ? undefined
     : ({ height: `${SCROLL_HEIGHT_VH}vh` } as React.CSSProperties);
-
-  const truckViewportW =
-    truckLayerRef.current?.clientWidth || truckLayout.drawWidth || 1;
-  /** Enter off-screen left → exit off-screen right across full hero scroll. */
-  const truckSlidePx = truckViewportW * (2 * progress - 1);
 
   return (
     <section
@@ -286,6 +334,15 @@ export default function ScrollScrubHero() {
       style={sectionStyle}
     >
       <div className="scroll-hero-sticky">
+        <video
+          ref={videoRef}
+          className="scroll-hero-video"
+          src={VIDEO_SRC}
+          muted
+          playsInline
+          preload="auto"
+          aria-hidden
+        />
         <canvas
           ref={canvasRef}
           className="scroll-hero-canvas"
@@ -326,13 +383,13 @@ export default function ScrollScrubHero() {
           aria-live="polite"
           aria-atomic="true"
         >
-          {PHASES.map((label, i) => {
+          {PHASES.map((phase, i) => {
             const wordOpacity = phaseWordOpacity(i, phaseProgress);
             if (wordOpacity < 0.02) return null;
             const t = 1 - wordOpacity;
             return (
               <span
-                key={label}
+                key={phase.label}
                 className="hero-phase-word"
                 style={{
                   opacity: wordOpacity,
@@ -341,30 +398,11 @@ export default function ScrollScrubHero() {
                 }}
                 aria-hidden={wordOpacity < 0.5}
               >
-                {label}
+                {phase.label}
               </span>
             );
           })}
         </div>
-
-        {!reducedMotion && (
-          <div ref={truckLayerRef} className="hero-scroll-truck-layer" aria-hidden>
-            <img
-              ref={truckRef}
-              src="/truck.png"
-              alt=""
-              className="hero-scroll-truck"
-              draggable={false}
-              onLoad={measureTruckLayout}
-              style={{
-                width: truckLayout.drawWidth || undefined,
-                height: truckLayout.drawHeight || undefined,
-                top: truckLayout.top,
-                transform: `translate(${truckSlidePx}px, ${TRUCK_DROP})`,
-              }}
-            />
-          </div>
-        )}
       </div>
     </section>
   );

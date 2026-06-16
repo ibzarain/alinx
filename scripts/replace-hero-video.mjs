@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Replace public/hero/video.mp4 and re-extract scroll-scrub frames.
+ * Re-extract scroll-scrub frames from public/building.mp4.
  *
  * Usage:
  *   npm run replace-hero-video
@@ -13,15 +13,11 @@ import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(__dirname, "..");
-const dest = path.join(root, "public/hero/video.mp4");
+const dest = path.join(root, "public/building.mp4");
 
 const defaultSources = [
+  path.join(root, "public/building.mp4"),
   "/mnt/c/Users/IbrahimArain/Downloads/Generated Video May 29, 2026 - 12_35PM.mp4",
-  path.join(
-    process.env.USERPROFILE || "",
-    "Downloads",
-    "Generated Video May 29, 2026 - 12_35PM.mp4"
-  ),
 ];
 
 const argSource = process.argv[2];
@@ -38,8 +34,10 @@ if (!source || !fs.existsSync(source)) {
   process.exit(1);
 }
 
-fs.mkdirSync(path.dirname(dest), { recursive: true });
-fs.copyFileSync(source, dest);
+if (source !== dest) {
+  fs.mkdirSync(path.dirname(dest), { recursive: true });
+  fs.copyFileSync(source, dest);
+}
 
 const stat = fs.statSync(dest);
 console.log(`Copied → ${dest} (${(stat.size / 1024 / 1024).toFixed(1)} MB)`);

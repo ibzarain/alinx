@@ -1,0 +1,8 @@
+{
+  "fps": 5,
+  "frameCount": 50,
+  "pattern": "/hero/frames/frame_%04d.jpg",
+  "width": 1920,
+  "height": 1080,
+  "cacheKey": "1781557055823.355-12187927"
+}

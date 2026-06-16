@@ -36,49 +36,6 @@ export function drawCover(
   ctx.drawImage(img, sx, sy, sw, sh, 0, 0, cw, ch);
 }
 
-export type CoverLayout = {
-  drawWidth: number;
-  drawHeight: number;
-  top: number;
-  /** Horizontal pan range for left-aligned cover (px). */
-  travel: number;
-};
-
-/** Match drawCover sizing for DOM overlays (left-aligned for pan). */
-export function getCoverLayout(
-  naturalWidth: number,
-  naturalHeight: number,
-  cw: number,
-  ch: number
-): CoverLayout {
-  if (naturalWidth <= 0 || naturalHeight <= 0 || cw <= 0 || ch <= 0) {
-    return { drawWidth: cw, drawHeight: ch, top: 0, travel: 0 };
-  }
-
-  const ir = naturalWidth / naturalHeight;
-  const cr = cw / ch;
-
-  if (ir > cr) {
-    const drawHeight = ch;
-    const drawWidth = ch * ir;
-    return {
-      drawWidth,
-      drawHeight,
-      top: 0,
-      travel: Math.max(0, drawWidth - cw),
-    };
-  }
-
-  const drawWidth = cw;
-  const drawHeight = cw / ir;
-  return {
-    drawWidth,
-    drawHeight,
-    top: (ch - drawHeight) / 2,
-    travel: 0,
-  };
-}
-
 export type OffscreenLayers = {
   layer: HTMLCanvasElement;
   layerCtx: CanvasRenderingContext2D;

@@ -145,7 +145,7 @@ nav.site-nav.nav-over-hero .nav-hamburger span { background: #fff; }
 /* ─── HERO (scroll-scrub) ──────────────────────── */
 #hero.scroll-hero {
   position: relative;
-  height: 360vh;
+  height: 240vh;
   background: #08090e;
 }
 
@@ -160,6 +160,14 @@ nav.site-nav.nav-over-hero .nav-hamburger span { background: #fff; }
   height: 100vh;
   min-height: 700px;
   overflow: hidden;
+}
+
+.scroll-hero-video {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .scroll-hero-canvas {
@@ -298,21 +306,6 @@ nav.site-nav.nav-over-hero .nav-hamburger span { background: #fff; }
     white-space: normal;
     max-width: 88%;
   }
-}
-
-.hero-scroll-truck-layer {
-  position: absolute;
-  inset: 0;
-  z-index: 10001;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-.hero-scroll-truck {
-  position: absolute;
-  left: 0;
-  max-width: none;
-  will-change: transform;
 }
 
 .hero-scrub-progress {
@@ -1005,7 +998,7 @@ footer {
   .team-grid { grid-template-columns: repeat(2,1fr); }
   .adv-grid { grid-template-columns: repeat(2,1fr); }
   .stats-strip { grid-template-columns: repeat(2,1fr); }
-  #hero.scroll-hero { height: 285vh; }
+  #hero.scroll-hero { height: 190vh; }
   .hero-content { top: 14%; left: 5%; max-width: 92%; }
   .hero-h1 { font-size: clamp(2.5rem, 10vw, 4rem); }
   .steel-features { grid-template-columns: 1fr; }
