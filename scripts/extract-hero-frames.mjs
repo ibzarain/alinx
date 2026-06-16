@@ -1,14 +1,12 @@
 #!/usr/bin/env node
 /**
  * Extract JPG frames from public/building.mp4 for scroll-scrub hero.
- * Re-run when building.mp4 changes, then commit public/hero/frames/.
- * Requires: ffmpeg (apt install ffmpeg)
+ * Clips the video at END_FRAME on a TIMELINE_FRAMES scale (e.g. 170/200 of clip).
  *
- * Env:
- *   HERO_FRAME_COUNT — total frames to extract (default: 200)
- *   HERO_END_RATIO — stop at this fraction of video length (default: 0.84 = frame 84/100)
- *   HERO_FRAME_WIDTH — max width (default: source width, capped at 1920)
- *   HERO_JPEG_QUALITY — mjpeg q:v 2–31, lower = better (default: 3)
+ * Re-run when building.mp4 or END_FRAME changes.
+ * Requires: ffmpeg
+ *
+ * Env: HERO_TIMELINE_FRAMES, HERO_END_FRAME, HERO_FRAME_WIDTH, HERO_JPEG_QUALITY
  */
 import { execSync } from "child_process";
 import fs from "fs";
@@ -20,8 +18,13 @@ const root = path.join(__dirname, "..");
 const videoPath = path.join(root, "public/building.mp4");
 const outDir = path.join(root, "public/hero/frames");
 
-const frameCount = Math.max(2, Number(process.env.HERO_FRAME_COUNT) || 200);
-const endRatio = Math.min(1, Math.max(0.01, Number(process.env.HERO_END_RATIO) || 0.80));
+// Full video = TIMELINE_FRAMES. END_FRAME is where to stop (1-based). Change END_FRAME to clip.
+const timelineFrames = Math.max(2, Number(process.env.HERO_TIMELINE_FRAMES) || 200);
+const endFrame = Math.min(
+  timelineFrames,
+  Math.max(1, Number(process.env.HERO_END_FRAME) || 170)
+);
+
 const jpegQuality = Math.min(
   31,
   Math.max(2, Number(process.env.HERO_JPEG_QUALITY) || 3)
@@ -56,8 +59,9 @@ try {
   /* use defaults */
 }
 
-const endTime = videoDuration * endRatio;
-const frameFps = frameCount / endTime;
+const endTime = videoDuration * (endFrame / timelineFrames);
+const extractCount = endFrame;
+const frameFps = extractCount / endTime;
 
 const maxWidth = Number(process.env.HERO_FRAME_WIDTH) || sourceWidth;
 const targetWidth = Math.min(sourceWidth, maxWidth, 1920);
@@ -78,7 +82,7 @@ for (const f of fs.readdirSync(outDir)) {
 }
 
 console.log(
-  `Extracting ${frameCount} frames (0–${(endRatio * 100).toFixed(0)}% of ${videoDuration.toFixed(2)}s ≈ ${endTime.toFixed(2)}s @ ${frameFps.toFixed(2)}fps, ${targetWidth}x${targetHeight}, JPEG q:v ${jpegQuality})...`
+  `Clipping at frame ${endFrame}/${timelineFrames} (≈${endTime.toFixed(2)}s of ${videoDuration.toFixed(2)}s), extracting ${extractCount} frames @ ${frameFps.toFixed(2)}fps, ${targetWidth}x${targetHeight}, JPEG q:v ${jpegQuality}...`
 );
 execSync(
   `ffmpeg -y -i "${videoPath}" -t ${endTime} -vf "${vf}" -q:v ${jpegQuality} "${path.join(outDir, "frame_%04d.jpg")}"`,
@@ -98,14 +102,15 @@ if (frames.length === 0) {
 const videoStat = fs.statSync(videoPath);
 const manifest = {
   frameCount: frames.length,
-  targetFrameCount: frameCount,
-  endRatio,
+  timelineFrames,
+  endFrame: frames.length,
   endTimeSec: endTime,
   fps: Number(frameFps.toFixed(3)),
   pattern: "/hero/frames/frame_%04d.jpg",
   width: targetWidth,
   height: targetHeight,
-  cacheKey: `${videoStat.mtimeMs}-${videoStat.size}-${frameCount}-${endRatio}`,
+  videoSrc: "/building.mp4",
+  cacheKey: `${videoStat.mtimeMs}-${videoStat.size}-${timelineFrames}-${endFrame}`,
 };
 
 fs.writeFileSync(
@@ -113,5 +118,5 @@ fs.writeFileSync(
   JSON.stringify(manifest, null, 2)
 );
 
-console.log(`Done: ${frames.length} frames → ${outDir}`);
+console.log(`Done: ${frames.length} frames (clipped) → ${outDir}`);
 console.log("manifest.json:", manifest);

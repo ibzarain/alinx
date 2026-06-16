@@ -2,14 +2,13 @@
 
 import { drawCover } from "@/lib/scroll-composite";
 import {
-  HERO_END_RATIO,
-  HERO_FRAME_COUNT,
   HERO_MANIFEST,
-  heroFrameSrc,
+  HERO_VIDEO_SRC,
+  heroFrameSrcForManifest,
+  mapScrollToFrameIndex,
+  type HeroFrameManifest,
 } from "@/lib/hero-manifest";
 import { useCallback, useEffect, useRef, useState } from "react";
-
-const VIDEO_SRC = "/building.mp4";
 
 const PHASES = [
   { label: "Foundation", span: 2 },
@@ -52,14 +51,16 @@ function phaseWordOpacity(phaseIndex: number, phaseProgress: number) {
   return 1;
 }
 
-function mapProgressToFrame(progress: number, frameCount: number) {
-  const p = clamp(progress, 0, 1);
-  return Math.min(frameCount - 1, Math.round(p * (frameCount - 1)));
-}
-
-function mapProgressToVideoTime(progress: number, duration: number) {
-  const p = clamp(progress, 0, 1);
-  return p * duration * HERO_END_RATIO;
+function mapProgressToVideoTime(
+  phaseP: number,
+  duration: number,
+  endTimeSec?: number
+) {
+  const p = clamp(phaseP, 0, 1);
+  if (endTimeSec && duration > 0) {
+    return p * Math.min(endTimeSec, duration);
+  }
+  return p * duration;
 }
 
 function getDpr(): number {
@@ -73,6 +74,8 @@ export default function ScrollScrubHero() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const imagesRef = useRef<HTMLImageElement[]>([]);
+  const manifestRef = useRef<HeroFrameManifest>(HERO_MANIFEST);
+  const frameCountRef = useRef(HERO_MANIFEST.frameCount);
   const modeRef = useRef<ScrubMode>("frames");
   const lastDrawKeyRef = useRef("");
   const rafRef = useRef<number | null>(null);
@@ -149,7 +152,11 @@ export default function ScrollScrubHero() {
       const video = videoRef.current;
       if (!video || !video.duration) return;
 
-      const target = mapProgressToVideoTime(phaseP, video.duration);
+      const target = mapProgressToVideoTime(
+        phaseP,
+        video.duration,
+        manifestRef.current.endTimeSec
+      );
       if (Math.abs(video.currentTime - target) > 0.02) {
         video.currentTime = target;
       }
@@ -180,7 +187,7 @@ export default function ScrollScrubHero() {
     }
 
     if (modeRef.current === "frames") {
-      drawFrame(mapProgressToFrame(phaseP, HERO_FRAME_COUNT));
+      drawFrame(mapScrollToFrameIndex(phaseP, frameCountRef.current));
     } else {
       seekVideo(phaseP);
     }
@@ -207,7 +214,22 @@ export default function ScrollScrubHero() {
     lastDrawKeyRef.current = "";
 
     async function loadFrameImages(): Promise<boolean> {
-      const frameCount = HERO_FRAME_COUNT;
+      let manifest: HeroFrameManifest = HERO_MANIFEST;
+      try {
+        const res = await fetch("/hero/frames/manifest.json");
+        if (res.ok) {
+          manifest = (await res.json()) as HeroFrameManifest;
+        }
+      } catch {
+        /* use bundled manifest */
+      }
+
+      if (cancelled || !manifest.frameCount) return false;
+
+      manifestRef.current = manifest;
+      frameCountRef.current = manifest.frameCount;
+
+      const frameCount = manifest.frameCount;
       const images: HTMLImageElement[] = new Array(frameCount);
       let loaded = 0;
 
@@ -220,7 +242,7 @@ export default function ScrollScrubHero() {
         for (let i = 0; i < frameCount; i++) {
           const img = new Image();
           img.decoding = "async";
-          img.src = heroFrameSrc(i);
+          img.src = heroFrameSrcForManifest(i, manifest);
           img.onload = onDone;
           img.onerror = onDone;
           images[i] = img;
@@ -330,7 +352,7 @@ export default function ScrollScrubHero() {
         <video
           ref={videoRef}
           className="scroll-hero-video"
-          src={VIDEO_SRC}
+          src={HERO_VIDEO_SRC}
           muted
           playsInline
           preload={useFrames ? "none" : "auto"}

@@ -1,11 +1,12 @@
 {
-  "frameCount": 200,
-  "targetFrameCount": 200,
-  "endRatio": 0.8,
-  "endTimeSec": 8,
-  "fps": 25,
+  "frameCount": 170,
+  "timelineFrames": 200,
+  "endFrame": 170,
+  "endTimeSec": 8.5,
+  "fps": 20,
   "pattern": "/hero/frames/frame_%04d.jpg",
   "width": 1920,
   "height": 1080,
-  "cacheKey": "1781557055823.355-12187927-200-0.8-logoCover-20-16-90x78"
+  "videoSrc": "/building.mp4",
+  "cacheKey": "1781557055823.355-12187927-200-170"
 }
