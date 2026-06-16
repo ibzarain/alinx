@@ -1,19 +1,15 @@
 "use client";
 
 import { drawCover } from "@/lib/scroll-composite";
+import {
+  HERO_END_RATIO,
+  HERO_FRAME_COUNT,
+  HERO_MANIFEST,
+  heroFrameSrc,
+} from "@/lib/hero-manifest";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-type FrameManifest = {
-  fps: number;
-  frameCount: number;
-  pattern: string;
-  width: number;
-  height: number;
-  cacheKey: string;
-};
-
 const VIDEO_SRC = "/building.mp4";
-const MANIFEST_PATH = "/hero/frames/manifest.json";
 
 const PHASES = [
   { label: "Foundation", span: 2 },
@@ -22,16 +18,10 @@ const PHASES = [
   { label: "Site Complete", span: 1 },
 ] as const;
 
-const SCROLL_HEIGHT_VH = 240;
 const HEADLINE_FADE_END = 0.18;
 
 function clamp(n: number, min: number, max: number) {
   return Math.min(max, Math.max(min, n));
-}
-
-function frameSrc(pattern: string, index: number) {
-  const n = String(index + 1).padStart(4, "0");
-  return pattern.replace("%04d", n);
 }
 
 function phaseScrollProgress(progress: number) {
@@ -67,6 +57,11 @@ function mapProgressToFrame(progress: number, frameCount: number) {
   return Math.min(frameCount - 1, Math.round(p * (frameCount - 1)));
 }
 
+function mapProgressToVideoTime(progress: number, duration: number) {
+  const p = clamp(progress, 0, 1);
+  return p * duration * HERO_END_RATIO;
+}
+
 function getDpr(): number {
   return Math.min(window.devicePixelRatio || 1, 2.5);
 }
@@ -78,12 +73,12 @@ export default function ScrollScrubHero() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const imagesRef = useRef<HTMLImageElement[]>([]);
-  const manifestRef = useRef<FrameManifest | null>(null);
-  const modeRef = useRef<ScrubMode>("video");
+  const modeRef = useRef<ScrubMode>("frames");
   const lastDrawKeyRef = useRef("");
   const rafRef = useRef<number | null>(null);
 
   const [ready, setReady] = useState(false);
+  const [useFrames, setUseFrames] = useState(true);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [progress, setProgress] = useState(0);
   const [headlineOpacity, setHeadlineOpacity] = useState(1);
@@ -154,7 +149,7 @@ export default function ScrollScrubHero() {
       const video = videoRef.current;
       if (!video || !video.duration) return;
 
-      const target = phaseP * video.duration;
+      const target = mapProgressToVideoTime(phaseP, video.duration);
       if (Math.abs(video.currentTime - target) > 0.02) {
         video.currentTime = target;
       }
@@ -184,8 +179,8 @@ export default function ScrollScrubHero() {
       return;
     }
 
-    if (modeRef.current === "frames" && manifestRef.current) {
-      drawFrame(mapProgressToFrame(phaseP, manifestRef.current.frameCount));
+    if (modeRef.current === "frames") {
+      drawFrame(mapProgressToFrame(phaseP, HERO_FRAME_COUNT));
     } else {
       seekVideo(phaseP);
     }
@@ -208,44 +203,39 @@ export default function ScrollScrubHero() {
 
     setReady(false);
     imagesRef.current = [];
-    manifestRef.current = null;
-    modeRef.current = "video";
+    modeRef.current = "frames";
     lastDrawKeyRef.current = "";
 
-    async function loadFrames(): Promise<boolean> {
-      try {
-        const res = await fetch(MANIFEST_PATH);
-        if (!res.ok) return false;
-        const manifest = (await res.json()) as FrameManifest;
-        if (!manifest.frameCount || cancelled) return false;
+    async function loadFrameImages(): Promise<boolean> {
+      const frameCount = HERO_FRAME_COUNT;
+      const images: HTMLImageElement[] = new Array(frameCount);
+      let loaded = 0;
 
-        const images: HTMLImageElement[] = new Array(manifest.frameCount);
-        let loaded = 0;
+      await new Promise<void>((resolve) => {
+        const onDone = () => {
+          loaded += 1;
+          if (loaded >= frameCount) resolve();
+        };
 
-        await new Promise<void>((resolve) => {
-          const onDone = () => {
-            loaded += 1;
-            if (loaded >= manifest.frameCount) resolve();
-          };
+        for (let i = 0; i < frameCount; i++) {
+          const img = new Image();
+          img.decoding = "async";
+          img.src = heroFrameSrc(i);
+          img.onload = onDone;
+          img.onerror = onDone;
+          images[i] = img;
+        }
+      });
 
-          for (let i = 0; i < manifest.frameCount; i++) {
-            const img = new Image();
-            img.decoding = "async";
-            img.src = frameSrc(manifest.pattern, i);
-            img.onload = onDone;
-            img.onerror = onDone;
-            images[i] = img;
-          }
-        });
+      if (cancelled) return false;
 
-        if (cancelled) return false;
-        manifestRef.current = manifest;
-        imagesRef.current = images;
-        modeRef.current = "frames";
-        return true;
-      } catch {
-        return false;
-      }
+      const firstOk = images[0]?.complete && images[0].naturalWidth > 0;
+      const lastOk =
+        images[frameCount - 1]?.complete && images[frameCount - 1].naturalWidth > 0;
+      if (!firstOk || !lastOk) return false;
+
+      imagesRef.current = images;
+      return true;
     }
 
     function loadVideo(): Promise<void> {
@@ -269,11 +259,19 @@ export default function ScrollScrubHero() {
     }
 
     async function init() {
-      const hasFrames = await loadFrames();
+      const hasFrames = await loadFrameImages();
       if (cancelled) return;
 
-      if (!hasFrames) {
+      if (hasFrames) {
+        modeRef.current = "frames";
+        setUseFrames(true);
+      } else {
+        console.warn(
+          "Hero frames missing or failed to load — falling back to video scrub.",
+          HERO_MANIFEST
+        );
         modeRef.current = "video";
+        setUseFrames(false);
         await loadVideo();
       }
 
@@ -322,16 +320,11 @@ export default function ScrollScrubHero() {
   const phaseProgress = phaseScrollProgress(progress);
   const phaseStageVisible = phaseProgress > 0;
 
-  const sectionStyle = reducedMotion
-    ? undefined
-    : ({ height: `${SCROLL_HEIGHT_VH}vh` } as React.CSSProperties);
-
   return (
     <section
       id="hero"
       ref={containerRef}
       className={`scroll-hero${reducedMotion ? " scroll-hero-reduced" : ""}`}
-      style={sectionStyle}
     >
       <div className="scroll-hero-sticky">
         <video
@@ -340,7 +333,7 @@ export default function ScrollScrubHero() {
           src={VIDEO_SRC}
           muted
           playsInline
-          preload="auto"
+          preload={useFrames ? "none" : "auto"}
           aria-hidden
         />
         <canvas

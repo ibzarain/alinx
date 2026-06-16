@@ -5,7 +5,8 @@
  * Requires: ffmpeg (apt install ffmpeg)
  *
  * Env:
- *   HERO_FRAME_FPS — extraction rate (default: 5, fewer = faster scroll scrub)
+ *   HERO_FRAME_COUNT — total frames to extract (default: 200)
+ *   HERO_END_RATIO — stop at this fraction of video length (default: 0.84 = frame 84/100)
  *   HERO_FRAME_WIDTH — max width (default: source width, capped at 1920)
  *   HERO_JPEG_QUALITY — mjpeg q:v 2–31, lower = better (default: 3)
  */
@@ -19,10 +20,8 @@ const root = path.join(__dirname, "..");
 const videoPath = path.join(root, "public/building.mp4");
 const outDir = path.join(root, "public/hero/frames");
 
-const frameFps = Math.min(
-  30,
-  Math.max(1, Number(process.env.HERO_FRAME_FPS) || 5)
-);
+const frameCount = Math.max(2, Number(process.env.HERO_FRAME_COUNT) || 200);
+const endRatio = Math.min(1, Math.max(0.01, Number(process.env.HERO_END_RATIO) || 0.80));
 const jpegQuality = Math.min(
   31,
   Math.max(2, Number(process.env.HERO_JPEG_QUALITY) || 3)
@@ -35,26 +34,37 @@ if (!fs.existsSync(videoPath)) {
 
 let sourceWidth = 1920;
 let sourceHeight = 1080;
+let videoDuration = 10;
 try {
-  const probe = execSync(
+  const sizeProbe = execSync(
     `ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=p=0:s=x "${videoPath}"`,
     { encoding: "utf8" }
   ).trim();
-  const [sw, sh] = probe.split("x").map(Number);
+  const [sw, sh] = sizeProbe.split("x").map(Number);
   if (sw && sh) {
     sourceWidth = sw;
     sourceHeight = sh;
   }
+
+  const durationProbe = execSync(
+    `ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${videoPath}"`,
+    { encoding: "utf8" }
+  ).trim();
+  const d = Number(durationProbe);
+  if (d > 0) videoDuration = d;
 } catch {
   /* use defaults */
 }
+
+const endTime = videoDuration * endRatio;
+const frameFps = frameCount / endTime;
 
 const maxWidth = Number(process.env.HERO_FRAME_WIDTH) || sourceWidth;
 const targetWidth = Math.min(sourceWidth, maxWidth, 1920);
 let targetHeight = Math.round((targetWidth / sourceWidth) * sourceHeight);
 if (targetHeight % 2 !== 0) targetHeight += 1;
 
-const scaleFilter =
+const vf =
   targetWidth < sourceWidth
     ? `fps=${frameFps},scale=${targetWidth}:${targetHeight}:flags=lanczos`
     : `fps=${frameFps}`;
@@ -68,10 +78,10 @@ for (const f of fs.readdirSync(outDir)) {
 }
 
 console.log(
-  `Extracting frames at ${frameFps}fps (${targetWidth}x${targetHeight}, JPEG q:v ${jpegQuality})...`
+  `Extracting ${frameCount} frames (0–${(endRatio * 100).toFixed(0)}% of ${videoDuration.toFixed(2)}s ≈ ${endTime.toFixed(2)}s @ ${frameFps.toFixed(2)}fps, ${targetWidth}x${targetHeight}, JPEG q:v ${jpegQuality})...`
 );
 execSync(
-  `ffmpeg -y -i "${videoPath}" -vf "${scaleFilter}" -q:v ${jpegQuality} "${path.join(outDir, "frame_%04d.jpg")}"`,
+  `ffmpeg -y -i "${videoPath}" -t ${endTime} -vf "${vf}" -q:v ${jpegQuality} "${path.join(outDir, "frame_%04d.jpg")}"`,
   { stdio: "inherit", cwd: root }
 );
 
@@ -87,12 +97,15 @@ if (frames.length === 0) {
 
 const videoStat = fs.statSync(videoPath);
 const manifest = {
-  fps: frameFps,
   frameCount: frames.length,
+  targetFrameCount: frameCount,
+  endRatio,
+  endTimeSec: endTime,
+  fps: Number(frameFps.toFixed(3)),
   pattern: "/hero/frames/frame_%04d.jpg",
   width: targetWidth,
   height: targetHeight,
-  cacheKey: `${videoStat.mtimeMs}-${videoStat.size}`,
+  cacheKey: `${videoStat.mtimeMs}-${videoStat.size}-${frameCount}-${endRatio}`,
 };
 
 fs.writeFileSync(
