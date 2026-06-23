@@ -2,7 +2,6 @@ import manifest from "../public/hero/frames/manifest.json";
 
 export type HeroFrameManifest = {
   frameCount: number;
-  timelineFrames?: number;
   endFrame?: number;
   endTimeSec?: number;
   fps: number;
@@ -15,7 +14,6 @@ export type HeroFrameManifest = {
 
 export const HERO_MANIFEST = manifest as HeroFrameManifest;
 export const HERO_FRAME_COUNT = HERO_MANIFEST.frameCount;
-export const HERO_TIMELINE_FRAMES = HERO_MANIFEST.timelineFrames ?? HERO_FRAME_COUNT;
 export const HERO_END_FRAME = HERO_MANIFEST.endFrame ?? HERO_FRAME_COUNT;
 export const HERO_END_TIME_SEC = HERO_MANIFEST.endTimeSec;
 export const HERO_VIDEO_SRC = HERO_MANIFEST.videoSrc ?? "/building.mp4";
@@ -40,6 +38,5 @@ export function mapScrollToVideoTime(progress: number, duration: number): number
   if (HERO_END_TIME_SEC && duration > 0) {
     return p * Math.min(HERO_END_TIME_SEC, duration);
   }
-  const ratio = HERO_END_FRAME / HERO_TIMELINE_FRAMES;
-  return p * duration * ratio;
+  return p * duration;
 }

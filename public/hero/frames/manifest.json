@@ -1,12 +1,11 @@
 {
-  "frameCount": 170,
-  "timelineFrames": 200,
-  "endFrame": 170,
-  "endTimeSec": 8.5,
-  "fps": 20,
+  "frameCount": 400,
+  "endFrame": 400,
+  "endTimeSec": 10,
+  "fps": 40,
   "pattern": "/hero/frames/frame_%04d.jpg",
   "width": 1920,
   "height": 1080,
   "videoSrc": "/building.mp4",
-  "cacheKey": "1781557055823.355-12187927-200-170"
+  "cacheKey": "1782231231917.566-10531235-400-400"
 }
