@@ -5,62 +5,23 @@ import {
   HERO_MANIFEST,
   HERO_VIDEO_SRC,
   heroFrameSrcForManifest,
-  mapScrollToFrameIndex,
+  mapScrollToFrameBlend,
+  mapScrollToVideoTime,
   type HeroFrameManifest,
 } from "@/lib/hero-manifest";
+import {
+  HERO_PHASES,
+  heroActivePhaseIndex,
+  heroPhaseScrollProgress,
+  HERO_HEADLINE_FADE_END,
+  phasePanelMotion,
+} from "@/lib/hero-phases";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-const PHASES = [
-  { label: "Foundation", span: 2 },
-  { label: "Facade Panels", span: 1 },
-  { label: "Glass Facade", span: 1 },
-  { label: "Site Complete", span: 1 },
-] as const;
-
-const HEADLINE_FADE_END = 0.18;
+const HEADLINE_FADE_END = HERO_HEADLINE_FADE_END;
 
 function clamp(n: number, min: number, max: number) {
   return Math.min(max, Math.max(min, n));
-}
-
-function phaseScrollProgress(progress: number) {
-  if (progress <= HEADLINE_FADE_END) return 0;
-  return (progress - HEADLINE_FADE_END) / (1 - HEADLINE_FADE_END);
-}
-
-function phaseSegmentBounds(phaseIndex: number) {
-  const totalSpan = PHASES.reduce((sum, p) => sum + p.span, 0);
-  let cursor = 0;
-  for (let i = 0; i < PHASES.length; i++) {
-    const seg = PHASES[i].span / totalSpan;
-    const start = cursor;
-    const end = cursor + seg;
-    if (i === phaseIndex) return { start, end, seg };
-    cursor = end;
-  }
-  return { start: 0, end: 0, seg: 0 };
-}
-
-function phaseWordOpacity(phaseIndex: number, phaseProgress: number) {
-  const { start, end, seg } = phaseSegmentBounds(phaseIndex);
-  const edge = seg * 0.12;
-
-  if (phaseProgress < start || phaseProgress > end) return 0;
-  if (phaseProgress < start + edge) return (phaseProgress - start) / edge;
-  if (phaseProgress > end - edge) return (end - phaseProgress) / edge;
-  return 1;
-}
-
-function mapProgressToVideoTime(
-  phaseP: number,
-  duration: number,
-  endTimeSec?: number
-) {
-  const p = clamp(phaseP, 0, 1);
-  if (endTimeSec && duration > 0) {
-    return p * Math.min(endTimeSec, duration);
-  }
-  return p * duration;
 }
 
 function getDpr(): number {
@@ -138,24 +99,62 @@ export default function ScrollScrubHero() {
     ctx.drawImage(video, sx, sy, sw, sh, 0, 0, w, h);
   }, []);
 
+  const drawFrameBlend = useCallback(
+    (fromIndex: number, toIndex: number, blend: number) => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+
+      const from = imagesRef.current[fromIndex];
+      const to = imagesRef.current[toIndex];
+      if (!from?.complete || !from.naturalWidth) return;
+
+      const dpr = getDpr();
+      const w = canvas.clientWidth;
+      const h = canvas.clientHeight;
+      if (w === 0 || h === 0) return;
+
+      const drawKey = `${w}x${h}@${dpr}:${fromIndex}-${toIndex}:${blend.toFixed(4)}`;
+      if (drawKey === lastDrawKeyRef.current) return;
+      lastDrawKeyRef.current = drawKey;
+
+      if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) {
+        canvas.width = Math.round(w * dpr);
+        canvas.height = Math.round(h * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = "high";
+      drawCover(ctx, from, w, h);
+
+      if (blend > 0.001 && toIndex !== fromIndex && to?.complete && to.naturalWidth) {
+        ctx.globalAlpha = blend;
+        drawCover(ctx, to, w, h);
+        ctx.globalAlpha = 1;
+      }
+    },
+    []
+  );
+
   const drawFrame = useCallback(
     (frameIndex: number) => {
-      const img = imagesRef.current[frameIndex];
-      if (!img?.complete || !img.naturalWidth) return;
-      drawImage(img, `frame:${frameIndex}`);
+      drawFrameBlend(frameIndex, frameIndex, 0);
     },
-    [drawImage]
+    [drawFrameBlend]
   );
 
   const seekVideo = useCallback(
-    (phaseP: number) => {
+    (scrubP: number) => {
       const video = videoRef.current;
       if (!video || !video.duration) return;
 
-      const target = mapProgressToVideoTime(
-        phaseP,
+      const target = mapScrollToVideoTime(
+        scrubP,
         video.duration,
-        manifestRef.current.endTimeSec
+        manifestRef.current
       );
       if (Math.abs(video.currentTime - target) > 0.02) {
         video.currentTime = target;
@@ -178,18 +177,21 @@ export default function ScrollScrubHero() {
     setProgress(p);
     setHeadlineOpacity(1 - clamp(p / HEADLINE_FADE_END, 0, 1));
 
-    const phaseP = phaseScrollProgress(p);
-
     if (reducedMotion) {
-      if (modeRef.current === "frames") drawFrame(0);
-      else seekVideo(0);
+      if (modeRef.current === "frames") {
+        drawFrame((manifestRef.current.startFrame ?? 1) - 1);
+      } else seekVideo(0);
       return;
     }
 
     if (modeRef.current === "frames") {
-      drawFrame(mapScrollToFrameIndex(phaseP, frameCountRef.current));
+      const { fromIndex, toIndex, blend } = mapScrollToFrameBlend(
+        p,
+        manifestRef.current
+      );
+      drawFrameBlend(fromIndex, toIndex, blend);
     } else {
-      seekVideo(phaseP);
+      seekVideo(p);
     }
 
     window.dispatchEvent(
@@ -251,9 +253,10 @@ export default function ScrollScrubHero() {
 
       if (cancelled) return false;
 
-      const firstOk = images[0]?.complete && images[0].naturalWidth > 0;
-      const lastOk =
-        images[frameCount - 1]?.complete && images[frameCount - 1].naturalWidth > 0;
+      const startIdx = (manifest.startFrame ?? 1) - 1;
+      const endIdx = Math.min(manifest.endFrame ?? frameCount, frameCount) - 1;
+      const firstOk = images[startIdx]?.complete && images[startIdx].naturalWidth > 0;
+      const lastOk = images[endIdx]?.complete && images[endIdx].naturalWidth > 0;
       if (!firstOk || !lastOk) return false;
 
       imagesRef.current = images;
@@ -339,8 +342,9 @@ export default function ScrollScrubHero() {
     };
   }, [ready, updateFromScroll]);
 
-  const phaseProgress = phaseScrollProgress(progress);
+  const phaseProgress = heroPhaseScrollProgress(progress);
   const phaseStageVisible = phaseProgress > 0;
+  const activePhaseIndex = heroActivePhaseIndex(phaseProgress);
 
   return (
     <section
@@ -398,25 +402,48 @@ export default function ScrollScrubHero() {
           aria-live="polite"
           aria-atomic="true"
         >
-          {PHASES.map((phase, i) => {
-            const wordOpacity = phaseWordOpacity(i, phaseProgress);
-            if (wordOpacity < 0.02) return null;
-            const t = 1 - wordOpacity;
-            return (
-              <span
-                key={phase.label}
-                className="hero-phase-word"
-                style={{
-                  opacity: wordOpacity,
-                  transform: `translate(-50%, calc(-50% + ${t * 6}px))`,
-                  filter: t > 0.15 ? `blur(${t * 3}px)` : "none",
-                }}
-                aria-hidden={wordOpacity < 0.5}
-              >
-                {phase.label}
-              </span>
-            );
-          })}
+          <div className="hero-phase-stack">
+            <div className="hero-phase-panels">
+              {HERO_PHASES.map((phase, i) => {
+                const motion = phasePanelMotion(i, phaseProgress);
+                if (motion.opacity < 0.004) return null;
+                return (
+                  <div
+                    key={phase.label}
+                    className="hero-phase-panel"
+                    style={{
+                      opacity: motion.opacity,
+                      zIndex: motion.zIndex,
+                    }}
+                    aria-hidden={motion.opacity < 0.5}
+                  >
+                    <div className="hero-phase-meta">
+                      <span className="hero-phase-line" aria-hidden />
+                      <span className="hero-phase-step">
+                        {phase.step} / 0{HERO_PHASES.length}
+                      </span>
+                    </div>
+                    <h3 className="hero-phase-title">{phase.label}</h3>
+                    <p className="hero-phase-desc">{phase.description}</p>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="hero-phase-rail" aria-hidden>
+              {HERO_PHASES.map((phase, i) => (
+                <span
+                  key={phase.label}
+                  className={`hero-phase-rail-seg${
+                    i < activePhaseIndex
+                      ? " is-past"
+                      : i === activePhaseIndex
+                        ? " is-active"
+                        : ""
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </section>

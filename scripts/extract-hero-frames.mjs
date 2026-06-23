@@ -4,8 +4,8 @@
  * Re-run when building.mp4 changes, then commit public/hero/frames/.
  * Requires: ffmpeg
  *
- * Env: HERO_FRAME_COUNT (default 400), HERO_END_FRAME (optional clip, default = full count),
- *   HERO_FRAME_WIDTH, HERO_JPEG_QUALITY
+ * Env: HERO_FRAME_COUNT (default 240), HERO_START_FRAME (auto: 65/400 ratio),
+ *   HERO_END_FRAME, HERO_FRAME_WIDTH, HERO_JPEG_QUALITY
  */
 import { execSync } from "child_process";
 import fs from "fs";
@@ -17,10 +17,22 @@ const root = path.join(__dirname, "..");
 const videoPath = path.join(root, "public/building.mp4");
 const outDir = path.join(root, "public/hero/frames");
 
-const frameCount = Math.max(2, Number(process.env.HERO_FRAME_COUNT) || 400);
+/** Reference timeline — startFrame scales with frame count (65/400 ≈ 16.25%). */
+const TIMELINE_REF_FRAMES = 400;
+const TIMELINE_REF_START = 65;
+
+const frameCount = Math.max(2, Number(process.env.HERO_FRAME_COUNT) || 240);
+const defaultStart = Math.max(
+  1,
+  Math.round((TIMELINE_REF_START / TIMELINE_REF_FRAMES) * frameCount)
+);
+const startFrame = Math.max(
+  1,
+  Number(process.env.HERO_START_FRAME) || defaultStart
+);
 const endFrame = Math.min(
   frameCount,
-  Math.max(1, Number(process.env.HERO_END_FRAME) || frameCount)
+  Math.max(startFrame, Number(process.env.HERO_END_FRAME) || frameCount)
 );
 
 const jpegQuality = Math.min(
@@ -109,14 +121,15 @@ if (frames.length === 0) {
 const videoStat = fs.statSync(videoPath);
 const manifest = {
   frameCount: frames.length,
-  endFrame: frames.length,
+  startFrame,
+  endFrame: Math.min(endFrame, frames.length),
   endTimeSec: endTime,
   fps: Number(frameFps.toFixed(3)),
   pattern: "/hero/frames/frame_%04d.jpg",
   width: targetWidth,
   height: targetHeight,
   videoSrc: "/building.mp4",
-  cacheKey: `${videoStat.mtimeMs}-${videoStat.size}-${frameCount}-${endFrame}`,
+  cacheKey: `${videoStat.mtimeMs}-${videoStat.size}-${frameCount}-${startFrame}-${endFrame}`,
 };
 
 fs.writeFileSync(
