@@ -11,10 +11,11 @@ export default function Nav() {
 
   useEffect(() => {
     const update = () => {
-      const y = window.scrollY;
-      const hero = document.getElementById("hero");
-      const heroShowing = hero
-        ? hero.getBoundingClientRect().bottom > 0
+      const heroEl =
+        document.getElementById("hero") ??
+        document.querySelector(".pnl-hero, .inner-hero");
+      const heroShowing = heroEl
+        ? heroEl.getBoundingClientRect().bottom > 72
         : false;
       setOverHero(heroShowing);
       setScrolled(!heroShowing);
