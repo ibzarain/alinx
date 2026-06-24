@@ -243,7 +243,6 @@ function FeatureSplit({
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={image} alt={alt} />
             </div>
-            <p className="pnl-media-caption">{alt}</p>
           </div>
         </div>
       </div>
@@ -262,7 +261,6 @@ function FactoryBand() {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/images/panelized/render.webp" alt="A-LINX render" />
             </div>
-            <p className="pnl-media-caption pnl-media-caption--dark">A-LINX render</p>
           </div>
           <div className="pnl-band-copy">
             <FactoryIntro />
@@ -598,7 +596,6 @@ function SavingsSection() {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/images/panelized/panelized-components.webp" alt="Panelized components" />
             </div>
-            <p className="pnl-media-caption">Panelized components</p>
           </div>
         </div>
 

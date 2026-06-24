@@ -36,7 +36,12 @@ export default function RootLayout({
       lang="en"
       className={`${barlowCondensed.variable} ${dmSans.variable} ${spaceMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <span data-hero-font-probe className="hero-pixel-font-probe" aria-hidden>
+          A
+        </span>
+        {children}
+      </body>
     </html>
   );
 }

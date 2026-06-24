@@ -1,67 +1,50 @@
 /**
- * Hero construction phase copy — timing is scroll-based, not video frames.
+ * Hero scroll beats — word morph on linear scroll (video/frame scrub stays 1:1).
  */
-export type HeroPhase = {
-  step: string;
-  label: string;
-  description: string;
-  /** Relative scroll time — Foundation is brief; later stages get more room. */
-  weight: number;
+
+export type HeroBeat = {
+  word: string;
 };
 
-export const HERO_PHASES: HeroPhase[] = [
-  {
-    step: "01",
-    label: "Foundation",
-    description:
-      "The build starts on site. Structure and cores rise floor by floor, setting the tolerances every panel and module will follow.",
-    weight: 1,
-  },
-  {
-    step: "02",
-    label: "Facade Panels",
-    description:
-      "Factory-built wall panels are lifted into place. Insulation, air barrier, and structure install together, much faster than stick-built.",
-    weight: 2,
-  },
-  {
-    step: "03",
-    label: "Glass Facade",
-    description:
-      "Glazing and exterior finishes close the envelope. Windows, cladding, and weatherproofing form a weathertight shell.",
-    weight: 2,
-  },
-  {
-    step: "04",
-    label: "Site Complete",
-    description:
-      "From foundation to finish, a fully integrated building delivered faster, tighter, and more economically than conventional construction.",
-    weight: 2.5,
-  },
+export const HERO_BEATS: HeroBeat[] = [
+  { word: "FOUNDATION" },
+  { word: "PANELS" },
+  { word: "EXTERIOR" },
 ];
 
-/** Headline mostly gone — phase cards begin while user is still leaving the hero title. */
+/** @deprecated Use HERO_BEATS */
+export const HERO_PHASES = HERO_BEATS;
+
+/**
+ * Narrative scroll breakpoints (0–1 after headline fade).
+ * Words begin at 0%, 33%, and 66%.
+ */
+export const HERO_WORD_CUES = [0, 0.22, 0.80, 1] as const;
+
+/**
+ * Scroll progress (0–1) spent on each word morph.
+ * Same duration for every transition — increase for slower morphs.
+ */
+export const HERO_MORPH_DURATION = 0.20;
+
+/** Headline fades before narrative words appear. */
 export const HERO_HEADLINE_FADE_END = 0.08;
 
-/** 0–1 progress through the phase-card region (after headline). */
-export function heroPhaseScrollProgress(heroProgress: number): number {
+/** 0–1 progress through the narrative region (after headline). */
+export function heroBeatScrollProgress(heroProgress: number): number {
   if (heroProgress <= HERO_HEADLINE_FADE_END) return 0;
   return (
     (heroProgress - HERO_HEADLINE_FADE_END) / (1 - HERO_HEADLINE_FADE_END)
   );
 }
 
-export function phaseSegmentBounds(phaseIndex: number) {
-  const totalWeight = HERO_PHASES.reduce((sum, p) => sum + p.weight, 0);
-  let cursor = 0;
-  for (let i = 0; i < HERO_PHASES.length; i++) {
-    const seg = HERO_PHASES[i].weight / totalWeight;
-    const start = cursor;
-    const end = cursor + seg;
-    if (i === phaseIndex) return { start, end, seg };
-    cursor = end;
-  }
-  return { start: 0, end: 0, seg: 0 };
+/** @deprecated Use heroBeatScrollProgress */
+export const heroPhaseScrollProgress = heroBeatScrollProgress;
+
+export function beatSegmentBounds(beatIndex: number) {
+  const start = HERO_WORD_CUES[beatIndex] ?? 0;
+  const end = HERO_WORD_CUES[beatIndex + 1] ?? 1;
+  return { start, end, seg: end - start };
 }
 
 function smoothstep(t: number): number {
@@ -69,46 +52,65 @@ function smoothstep(t: number): number {
   return x * x * (3 - 2 * x);
 }
 
-export type PhasePanelMotion = {
-  opacity: number;
-  zIndex: number;
-};
+/** Scroll timing → pixel morph draw state */
+export function morphStateFromBeatProgress(
+  beatProgress: number
+): import("@/lib/hero-pixel-mask").MorphDrawState {
+  const last = HERO_BEATS.length - 1;
+  const idx = heroActiveBeatIndex(beatProgress);
+  const { end } = beatSegmentBounds(idx);
 
-/** In-place opacity crossfade — no slide or blur. */
-export function phasePanelMotion(
-  phaseIndex: number,
-  phaseProgress: number
-): PhasePanelMotion {
-  const { start, end, seg } = phaseSegmentBounds(phaseIndex);
-  const edge = seg * 0.14;
-
-  if (phaseProgress < start || phaseProgress > end) {
-    return { opacity: 0, zIndex: phaseIndex };
-  }
-
-  if (phaseProgress < start + edge) {
+  if (idx === last) {
     return {
-      opacity: smoothstep((phaseProgress - start) / edge),
-      zIndex: 10 + phaseIndex,
+      mode: "hold",
+      wordIndex: idx,
+      nextIndex: idx,
+      reveal: 1,
+      morphT: 0,
+      dissolve: 0,
     };
   }
 
-  if (phaseProgress > end - edge) {
+  const morphStart = end - HERO_MORPH_DURATION;
+
+  if (beatProgress < morphStart) {
     return {
-      opacity: smoothstep((end - phaseProgress) / edge),
-      zIndex: 10 + phaseIndex,
+      mode: "hold",
+      wordIndex: idx,
+      nextIndex: idx,
+      reveal: 1,
+      morphT: 0,
+      dissolve: 0,
     };
   }
 
-  return { opacity: 1, zIndex: 10 + phaseIndex };
+  const morphT = smoothstep(
+    (beatProgress - morphStart) / HERO_MORPH_DURATION
+  );
+  return {
+    mode: "morph",
+    wordIndex: idx,
+    nextIndex: idx + 1,
+    reveal: 1,
+    morphT,
+    dissolve: 0,
+  };
 }
 
-/** Which phase is primary at this scroll position (for progress rail). */
-export function heroActivePhaseIndex(phaseProgress: number): number {
-  if (phaseProgress <= 0) return 0;
-  for (let i = 0; i < HERO_PHASES.length; i++) {
-    const { start, end } = phaseSegmentBounds(i);
-    if (phaseProgress >= start && phaseProgress < end) return i;
-  }
-  return HERO_PHASES.length - 1;
+export function morphVisibility(
+  _state: import("@/lib/hero-pixel-mask").MorphDrawState
+): number {
+  return 1;
 }
+
+export function heroActiveBeatIndex(beatProgress: number): number {
+  if (beatProgress <= 0) return 0;
+  for (let i = 0; i < HERO_BEATS.length; i++) {
+    const { start, end } = beatSegmentBounds(i);
+    if (beatProgress >= start && beatProgress < end) return i;
+  }
+  return HERO_BEATS.length - 1;
+}
+
+/** @deprecated Use heroActiveBeatIndex */
+export const heroActivePhaseIndex = heroActiveBeatIndex;

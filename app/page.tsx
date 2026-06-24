@@ -6,29 +6,6 @@ import ScrollScrubHero from "@/components/ScrollScrubHero";
 import Nav from "@/components/Nav";
 import SiteFooter from "@/components/SiteFooter";
 
-/* ─── STATS ─────────────────────────────────────── */
-const STATS = [
-  { value: "35",    unit: "%",  desc: "Faster Superstructure Build" },
-  { value: "20",    unit: "%",  desc: "Lower Superstructure Cost" },
-  { value: "±0.01", unit: "\"", desc: "Frame Height Precision" },
-  { value: "50",    unit: "%",  desc: "Overall Schedule Reduction" },
-];
-
-function Stats() {
-  return (
-    <div className="stats-strip">
-      {STATS.map((s) => (
-        <div key={s.desc} className="stat-cell">
-          <div className="stat-num">
-            {s.value}<span className="stat-unit">{s.unit}</span>
-          </div>
-          <div className="stat-desc">{s.desc}</div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 /* ─── SERVICES ──────────────────────────────────── */
 function Services() {
   return (
@@ -362,7 +339,6 @@ export default function Home() {
     <>
       <Nav />
       <ScrollScrubHero />
-      <Stats />
       <Services />
       <Advantages />
       <Steel />

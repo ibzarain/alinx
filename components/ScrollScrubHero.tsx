@@ -10,12 +10,10 @@ import {
   type HeroFrameManifest,
 } from "@/lib/hero-manifest";
 import {
-  HERO_PHASES,
-  heroActivePhaseIndex,
-  heroPhaseScrollProgress,
+  heroBeatScrollProgress,
   HERO_HEADLINE_FADE_END,
-  phasePanelMotion,
 } from "@/lib/hero-phases";
+import HeroMorphNarrative from "@/components/HeroMorphNarrative";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 const HEADLINE_FADE_END = HERO_HEADLINE_FADE_END;
@@ -342,9 +340,8 @@ export default function ScrollScrubHero() {
     };
   }, [ready, updateFromScroll]);
 
-  const phaseProgress = heroPhaseScrollProgress(progress);
-  const phaseStageVisible = phaseProgress > 0;
-  const activePhaseIndex = heroActivePhaseIndex(phaseProgress);
+  const beatProgress = heroBeatScrollProgress(progress);
+  const narrativeVisible = beatProgress > 0;
 
   return (
     <section
@@ -397,54 +394,11 @@ export default function ScrollScrubHero() {
           </div>
         </div>
 
-        <div
-          className={`hero-phase-stage${phaseStageVisible ? " visible" : ""}`}
-          aria-live="polite"
-          aria-atomic="true"
-        >
-          <div className="hero-phase-stack">
-            <div className="hero-phase-panels">
-              {HERO_PHASES.map((phase, i) => {
-                const motion = phasePanelMotion(i, phaseProgress);
-                if (motion.opacity < 0.004) return null;
-                return (
-                  <div
-                    key={phase.label}
-                    className="hero-phase-panel"
-                    style={{
-                      opacity: motion.opacity,
-                      zIndex: motion.zIndex,
-                    }}
-                    aria-hidden={motion.opacity < 0.5}
-                  >
-                    <div className="hero-phase-meta">
-                      <span className="hero-phase-line" aria-hidden />
-                      <span className="hero-phase-step">
-                        {phase.step} / 0{HERO_PHASES.length}
-                      </span>
-                    </div>
-                    <h3 className="hero-phase-title">{phase.label}</h3>
-                    <p className="hero-phase-desc">{phase.description}</p>
-                  </div>
-                );
-              })}
-            </div>
-            <div className="hero-phase-rail" aria-hidden>
-              {HERO_PHASES.map((phase, i) => (
-                <span
-                  key={phase.label}
-                  className={`hero-phase-rail-seg${
-                    i < activePhaseIndex
-                      ? " is-past"
-                      : i === activePhaseIndex
-                        ? " is-active"
-                        : ""
-                  }`}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
+        <HeroMorphNarrative
+          beatProgress={beatProgress}
+          visible={narrativeVisible}
+          reducedMotion={reducedMotion}
+        />
       </div>
     </section>
   );
