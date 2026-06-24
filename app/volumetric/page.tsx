@@ -41,81 +41,6 @@ const GALLERY = [
   { src: "/images/volumetric/slides/slide3.webp", alt: "" },
 ];
 
-const KEY_BENEFITS = [
-  {
-    title: "Built for Canada's housing challenges",
-    points: [
-      "Factory built using modern methods that meet National Building Code",
-      "Rapid deployment in urban, rural, and remote locations",
-      "Deploys from single ADUs up to 20-storey communities",
-    ],
-  },
-  {
-    title: "Replicable at scale",
-    points: [
-      "Standardized systems allow province-to-province rollout without requirement for additional re-engineering",
-      "Efficient transport and on-site assembly",
-      "Streamlined process supports large-scale community builds",
-    ],
-  },
-  {
-    title: "Fully integrated model",
-    points: [
-      "Design, engineering, fabrication, transport, and site build all managed in-house",
-      "Consistent quality control, predictable timelines, reduced risk",
-    ],
-  },
-  {
-    title: "Adaptable to local needs",
-    points: [
-      "Flexible layouts and finishes suited for diverse communities",
-      "Ability to reflect cultural and aesthetic priorities",
-      "Custom design options without slowing production",
-    ],
-  },
-];
-
-const STEEL_ADVANTAGES = [
-  {
-    title: "Stronger and safer",
-    points: [
-      "Strength-to-weight ratio three to five times higher than wood",
-      "Engineered to handle transport, wind, and seismic conditions",
-      "Non-combustible structure protects people and reduces insurance costs",
-    ],
-  },
-  {
-    title: "Sustainable choice",
-    points: [
-      "Entire structure is recyclable steel",
-      "Minimal waste in production",
-      "Reduced foundation requirements and lower transportation emissions",
-      "Supports high performance energy design and airtight construction",
-    ],
-  },
-  {
-    title: "Durable and healthy",
-    points: [
-      "No rot, termites, mold, or shrinkage",
-      "Maintains structural integrity across seasons",
-      "Precision-built components eliminate warping",
-    ],
-  },
-];
-
-const STEEL_FASTER = [
-  "Factory production shortens build schedules by thirty to fifty per cent",
-  "On site assembly completed in days",
-  "Immune to lumber price swings and weather delays",
-];
-
-const STEEL_RESULT = [
-  "Faster to build",
-  "Stronger and safer",
-  "More sustainable",
-  "Built for scale in any community",
-];
-
 /* ─── Shared bits ─────────────────────────────────── */
 function SourceList({ items, dark = false, cols = false }: { items: string[]; dark?: boolean; cols?: boolean }) {
   return (
@@ -279,110 +204,6 @@ function Disrupt() {
   );
 }
 
-/* ─── KEY BENEFITS ────────────────────────────────── */
-function KeyBenefits() {
-  return (
-    <section className="pnl-block pnl-block--dark">
-      <div className="pnl-container">
-        <h2 className="section-h2 pnl-section-h2 pnl-section-h2--light reveal vol-key-benefits-kicker">
-          <span className="pnl-kicker pnl-kicker--light" aria-hidden />
-          KEY BENEFITS
-        </h2>
-        <h2 className="section-h2 pnl-section-h2 pnl-section-h2--light reveal d1 vol-key-benefits-head">
-          Modular construction simply makes better sense
-        </h2>
-        <div className="pnl-adv-grid pnl-adv-grid--quad">
-          {KEY_BENEFITS.map((b, i) => (
-            <div key={b.title} className={`pnl-adv-card reveal${DELAY[i % 2]}`}>
-              <div className="pnl-adv-card-top">
-                <span className="pnl-adv-index">{String(i + 1).padStart(2, "0")}</span>
-              </div>
-              <div className="pnl-adv-title">{b.title}</div>
-              <SourceList items={b.points} dark />
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ─── LIGHT GAUGE STEEL ───────────────────────────── */
-function Steel() {
-  return (
-    <section className="pnl-block pnl-block--cream">
-      <div className="pnl-container">
-        <h2 className="section-h2 pnl-section-h2 reveal">
-          <span className="pnl-kicker" aria-hidden />
-          Light gauge steel: a future-proof advantage
-        </h2>
-        <div className="pnl-outcome-grid pnl-outcome-grid--quad">
-          {STEEL_ADVANTAGES.map((s, i) => (
-            <div key={s.title} className={`pnl-outcome-card reveal${DELAY[i % 2]}`}>
-              <div className="pnl-outcome-title">{s.title}</div>
-              <SourceList items={s.points} />
-            </div>
-          ))}
-        </div>
-        <div className="pnl-inclusions reveal">
-          <h3 className="pnl-inclusions-title">
-            The Result: a repeatable and adaptable building solution that is:
-          </h3>
-          <SourceList items={STEEL_RESULT} />
-        </div>
-        <div className="pnl-outcome-card reveal vol-steel-faster">
-          <div className="pnl-outcome-title">Faster and predictable</div>
-          <SourceList items={STEEL_FASTER} />
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ─── CSA + ENTERPRISE ────────────────────────────── */
-function Closing() {
-  return (
-    <section className="pnl-block pnl-block--light">
-      <div className="pnl-container">
-        <div className="pnl-outcome-card reveal vol-closing-card">
-          <span className="pnl-kicker" aria-hidden />
-          <h2 className="section-h2 pnl-section-h2">A fully certified CSA facility</h2>
-          <p className="pnl-outcome-text">
-            Alinx operates as a fully certified CSA A277 facility, demonstrating our commitment to
-            the highest standards of quality, consistency, and compliance in prefabricated
-            construction. This certification ensures that all components manufactured in our
-            controlled environment meet rigorous building code requirements through a third-party
-            audited quality management system. For our clients, this means greater confidence in
-            product performance, improved construction efficiency, and streamlined approvals on
-            every project.
-          </p>
-        </div>
-        <div className="pnl-outcome-card reveal d1 vol-closing-card vol-closing-card--spaced">
-          <span className="pnl-kicker" aria-hidden />
-          <h2 className="section-h2 pnl-section-h2">
-            Backed by a broadly diversified enterprise that allows us to self perform across a
-            variety of construction disciplines
-          </h2>
-          <EnterpriseProse />
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function EnterpriseProse() {
-  const text =
-    "A-Linx is affiliated with service providers that allow us to design and manage every aspect of the build cycle, from property acquisition to long-term facility management. Our core team is led by experienced innovators in light gauge steel construction and certified welding professionals, and backed by on-staff construction managers who have collectively been awarded projects valued at over $20 billion since 2015. It is a true one-stop shop for projects of all sizes and levels of complexity.";
-  const parts = text.split(/(\$20 billion)/);
-  return (
-    <p className="pnl-outcome-text">
-      {parts.map((part, i) =>
-        part === "$20 billion" ? <strong key={i} className="pnl-stat-inline">{part}</strong> : part
-      )}
-    </p>
-  );
-}
-
 export default function VolumetricPage() {
   useScrollReveal();
   return (
@@ -392,9 +213,6 @@ export default function VolumetricPage() {
       <TrueVolumetric />
       <Metaloq />
       <Disrupt />
-      <KeyBenefits />
-      <Steel />
-      <Closing />
       <SiteFooter />
     </div>
   );

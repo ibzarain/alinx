@@ -21,6 +21,14 @@ const DARK_NAV_ZONE_SELECTOR = [
   ".pnl-stats-wrap",
 ].join(",");
 
+const NAV_LINKS = [
+  { href: "/panelized", label: "Panelized" },
+  { href: "/volumetric", label: "Volumetric" },
+  { href: "/about", label: "About" },
+  { href: "/projects", label: "Projects" },
+  { href: "/contact", label: "Contact" },
+] as const;
+
 function zoneCoversNavProbe(el: Element): boolean {
   const rect = el.getBoundingClientRect();
   return rect.top <= NAV_PROBE_Y && rect.bottom > NAV_PROBE_Y;
@@ -75,10 +83,11 @@ export default function Nav() {
           />
         </Link>
         <ul className="nav-links">
-          <li><Link href="/panelized">Panelized</Link></li>
-          <li><Link href="/volumetric">Volumetric</Link></li>
-          <li><a href="/#projects">Projects</a></li>
-          <li><a href="/#team">Team</a></li>
+          {NAV_LINKS.map((item) => (
+            <li key={item.href}>
+              <Link href={item.href}>{item.label}</Link>
+            </li>
+          ))}
         </ul>
         <a href="tel:2267247219" className="nav-cta">226-724-7219</a>
         <button
@@ -91,10 +100,11 @@ export default function Nav() {
       </nav>
 
       <nav className={`nav-mobile${mobileOpen ? " open" : ""}`}>
-        <Link href="/panelized" onClick={close}>Panelized</Link>
-        <Link href="/volumetric" onClick={close}>Volumetric</Link>
-        <a href="/#projects" onClick={close}>Projects</a>
-        <a href="/#team"     onClick={close}>Team</a>
+        {NAV_LINKS.map((item) => (
+          <Link key={item.href} href={item.href} onClick={close}>
+            {item.label}
+          </Link>
+        ))}
         <a href="tel:2267247219" className="mobile-cta" onClick={close}>226-724-7219</a>
       </nav>
     </>

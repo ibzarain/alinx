@@ -21,9 +21,9 @@ const spaceMono = Space_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "A-LINX Building Technologies — Vertically Integrated. Factory Precise.",
+  title: "A-LINX Building Technologies",
   description:
-    "Factory-engineered modular structures and panelized systems built to manufacturing tolerances, delivered 35% faster and 20% more economically than conventional construction.",
+    "A-Linx is a fully integrated builder of modular structures and panelized systems. The market-leading precision of our engineering and factory fabrication allow your project to advance with previously unthinkable speed, accuracy and economy.",
 };
 
 export default function RootLayout({
