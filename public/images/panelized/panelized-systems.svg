@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 3714 2314"
+     width="100%"
+     height="auto"
+     role="img"
+     aria-label="Panelized System diagram with numbered callouts 1 through 6">
+  <image href="/images/panelized/panelized-systems.webp" x="0" y="0" width="3714" height="2314" preserveAspectRatio="xMidYMid meet"/>
+  <g id="pnl-diagram-hotspots">
+    <g class="pnl-svg-hotspot" data-num="1" data-place="right" role="button" tabindex="0" aria-label="Callout 1">
+      <circle class="pnl-svg-hotspot-mask" cx="1846.7" cy="1988.8" r="58.1" />
+      <circle class="pnl-svg-hotspot-bg" cx="1846.7" cy="1988.8" r="51.1" />
+      <text class="pnl-svg-hotspot-num" x="1846.7" y="1988.8" text-anchor="middle" dominant-baseline="central" font-size="54">1</text>
+    </g>
+    <g class="pnl-svg-hotspot" data-num="2" data-place="right" role="button" tabindex="0" aria-label="Callout 2">
+      <circle class="pnl-svg-hotspot-mask" cx="482.8" cy="1820.1" r="58.2" />
+      <circle class="pnl-svg-hotspot-bg" cx="482.8" cy="1820.1" r="51.2" />
+      <text class="pnl-svg-hotspot-num" x="482.8" y="1820.1" text-anchor="middle" dominant-baseline="central" font-size="54">2</text>
+    </g>
+    <g class="pnl-svg-hotspot" data-num="3" data-place="right" role="button" tabindex="0" aria-label="Callout 3">
+      <circle class="pnl-svg-hotspot-mask" cx="1652.8" cy="889.2" r="58.2" />
+      <circle class="pnl-svg-hotspot-bg" cx="1652.8" cy="889.2" r="51.2" />
+      <text class="pnl-svg-hotspot-num" x="1652.8" y="889.2" text-anchor="middle" dominant-baseline="central" font-size="54">3</text>
+    </g>
+    <g class="pnl-svg-hotspot" data-num="4" data-place="right" role="button" tabindex="0" aria-label="Callout 4">
+      <circle class="pnl-svg-hotspot-mask" cx="1061.2" cy="572.1" r="58.2" />
+      <circle class="pnl-svg-hotspot-bg" cx="1061.2" cy="572.1" r="51.2" />
+      <text class="pnl-svg-hotspot-num" x="1061.2" y="572.1" text-anchor="middle" dominant-baseline="central" font-size="54">4</text>
+    </g>
+    <g class="pnl-svg-hotspot" data-num="5" data-place="right" role="button" tabindex="0" aria-label="Callout 5">
+      <circle class="pnl-svg-hotspot-mask" cx="2255.9" cy="268.6" r="58.2" />
+      <circle class="pnl-svg-hotspot-bg" cx="2255.9" cy="268.6" r="51.2" />
+      <text class="pnl-svg-hotspot-num" x="2255.9" y="268.6" text-anchor="middle" dominant-baseline="central" font-size="54">5</text>
+    </g>
+    <g class="pnl-svg-hotspot" data-num="6" data-place="left" role="button" tabindex="0" aria-label="Callout 6">
+      <circle class="pnl-svg-hotspot-mask" cx="3282.0" cy="1530.1" r="58.3" />
+      <circle class="pnl-svg-hotspot-bg" cx="3282.0" cy="1530.1" r="51.3" />
+      <text class="pnl-svg-hotspot-num" x="3282.0" y="1530.1" text-anchor="middle" dominant-baseline="central" font-size="54">6</text>
+    </g>
+  </g>
+</svg>

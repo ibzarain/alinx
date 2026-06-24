@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import Nav from "@/components/Nav";
@@ -20,18 +20,18 @@ function useScrollReveal() {
 const DELAY = ["", " d1", " d2", " d3"];
 
 const ADV_ICONS = [
-  <svg key="1" viewBox="0 0 30 30" fill="none"><rect x="1" y="13" width="11" height="15" stroke="currentColor" strokeWidth="1.5"/><rect x="17" y="5" width="11" height="23" stroke="currentColor" strokeWidth="1.5"/><line x1="6" y1="1" x2="6" y2="13" stroke="currentColor" strokeWidth="1" strokeDasharray="2 2"/></svg>,
-  <svg key="2" viewBox="0 0 30 30" fill="none"><circle cx="15" cy="10" r="5" stroke="currentColor" strokeWidth="1.5"/><path d="M5 26c0-5 4.5-9 10-9s10 4 10 9" stroke="currentColor" strokeWidth="1.5"/></svg>,
-  <svg key="3" viewBox="0 0 30 30" fill="none"><path d="M3 18L10 11L16 16L23 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><path d="M5 3Q9 7 7 11" stroke="currentColor" strokeWidth="1" opacity="0.5"/></svg>,
-  <svg key="4" viewBox="0 0 30 30" fill="none"><rect x="7" y="7" width="16" height="16" stroke="currentColor" strokeWidth="1.5"/><rect x="11" y="11" width="8" height="8" stroke="currentColor" strokeWidth="1" opacity="0.7"/></svg>,
-  <svg key="5" viewBox="0 0 30 30" fill="none"><rect x="3" y="3" width="10" height="10" stroke="currentColor" strokeWidth="1.5"/><rect x="17" y="3" width="10" height="10" stroke="currentColor" strokeWidth="1.5"/><rect x="3" y="17" width="10" height="10" stroke="currentColor" strokeWidth="1.5"/><rect x="17" y="17" width="10" height="10" stroke="currentColor" strokeWidth="0.75" strokeDasharray="2 2"/></svg>,
-  <svg key="6" viewBox="0 0 30 30" fill="none"><path d="M15 3L27 9L27 21L15 27L3 21L3 9Z" stroke="currentColor" strokeWidth="1.5"/></svg>,
-  <svg key="7" viewBox="0 0 30 30" fill="none"><circle cx="15" cy="15" r="10" stroke="currentColor" strokeWidth="1.5"/><path d="M10 15L13 18L20 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
-  <svg key="8" viewBox="0 0 30 30" fill="none"><path d="M5 24L9 13L15 19L21 9L25 17" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
-  <svg key="9" viewBox="0 0 30 30" fill="none"><rect x="2" y="9" width="26" height="17" stroke="currentColor" strokeWidth="1.5"/><line x1="2" y1="15" x2="28" y2="15" stroke="currentColor" strokeWidth="0.75"/><line x1="10" y1="9" x2="10" y2="26" stroke="currentColor" strokeWidth="0.75"/></svg>,
-  <svg key="10" viewBox="0 0 30 30" fill="none"><path d="M5 26L5 15L25 15L25 26" stroke="currentColor" strokeWidth="1.5"/><path d="M1 15L15 5L29 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>,
-  <svg key="11" viewBox="0 0 30 30" fill="none"><rect x="3" y="19" width="24" height="8" stroke="currentColor" strokeWidth="1.5"/><rect x="8" y="13" width="14" height="6" stroke="currentColor" strokeWidth="1.5"/><rect x="12" y="7" width="6" height="6" stroke="currentColor" strokeWidth="1.5"/></svg>,
-  <svg key="12" viewBox="0 0 30 30" fill="none"><line x1="15" y1="27" x2="15" y2="5" stroke="currentColor" strokeWidth="1.5"/><polyline points="7,13 15,5 23,13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+  <svg key="1" viewBox="0 0 30 30" fill="none"><rect x="1" y="13" width="11" height="15" stroke="currentColor" strokeWidth="1.5" /><rect x="17" y="5" width="11" height="23" stroke="currentColor" strokeWidth="1.5" /><line x1="6" y1="1" x2="6" y2="13" stroke="currentColor" strokeWidth="1" strokeDasharray="2 2" /></svg>,
+  <svg key="2" viewBox="0 0 30 30" fill="none"><circle cx="15" cy="10" r="5" stroke="currentColor" strokeWidth="1.5" /><path d="M5 26c0-5 4.5-9 10-9s10 4 10 9" stroke="currentColor" strokeWidth="1.5" /></svg>,
+  <svg key="3" viewBox="0 0 30 30" fill="none"><path d="M3 18L10 11L16 16L23 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /><path d="M5 3Q9 7 7 11" stroke="currentColor" strokeWidth="1" opacity="0.5" /></svg>,
+  <svg key="4" viewBox="0 0 30 30" fill="none"><rect x="7" y="7" width="16" height="16" stroke="currentColor" strokeWidth="1.5" /><rect x="11" y="11" width="8" height="8" stroke="currentColor" strokeWidth="1" opacity="0.7" /></svg>,
+  <svg key="5" viewBox="0 0 30 30" fill="none"><rect x="3" y="3" width="10" height="10" stroke="currentColor" strokeWidth="1.5" /><rect x="17" y="3" width="10" height="10" stroke="currentColor" strokeWidth="1.5" /><rect x="3" y="17" width="10" height="10" stroke="currentColor" strokeWidth="1.5" /><rect x="17" y="17" width="10" height="10" stroke="currentColor" strokeWidth="0.75" strokeDasharray="2 2" /></svg>,
+  <svg key="6" viewBox="0 0 30 30" fill="none"><path d="M15 3L27 9L27 21L15 27L3 21L3 9Z" stroke="currentColor" strokeWidth="1.5" /></svg>,
+  <svg key="7" viewBox="0 0 30 30" fill="none"><circle cx="15" cy="15" r="10" stroke="currentColor" strokeWidth="1.5" /><path d="M10 15L13 18L20 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>,
+  <svg key="8" viewBox="0 0 30 30" fill="none"><path d="M5 24L9 13L15 19L21 9L25 17" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>,
+  <svg key="9" viewBox="0 0 30 30" fill="none"><rect x="2" y="9" width="26" height="17" stroke="currentColor" strokeWidth="1.5" /><line x1="2" y1="15" x2="28" y2="15" stroke="currentColor" strokeWidth="0.75" /><line x1="10" y1="9" x2="10" y2="26" stroke="currentColor" strokeWidth="0.75" /></svg>,
+  <svg key="10" viewBox="0 0 30 30" fill="none"><path d="M5 26L5 15L25 15L25 26" stroke="currentColor" strokeWidth="1.5" /><path d="M1 15L15 5L29 15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>,
+  <svg key="11" viewBox="0 0 30 30" fill="none"><rect x="3" y="19" width="24" height="8" stroke="currentColor" strokeWidth="1.5" /><rect x="8" y="13" width="14" height="6" stroke="currentColor" strokeWidth="1.5" /><rect x="12" y="7" width="6" height="6" stroke="currentColor" strokeWidth="1.5" /></svg>,
+  <svg key="12" viewBox="0 0 30 30" fill="none"><line x1="15" y1="27" x2="15" y2="5" stroke="currentColor" strokeWidth="1.5" /><polyline points="7,13 15,5 23,13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>,
 ];
 
 const ADVANTAGES_FIRST = [
@@ -68,12 +68,12 @@ const FACTORY_BULLETS = [
 ];
 
 const ELEMENTS = [
-  { title: "1. Floor assemblies", text: "A-Linx uses a variety of floor systems, including composite decks, hollow-core plank, open web steel joists, and standard C-joists." },
-  { title: "2. Exterior walls", text: "Exterior wall sections are typically shipped with insulation, air barrier and sheathing in place. They can also be shipped with a variety of pre-installed exterior finishes, i.e. EIFS, faux brick, hardy board or aluminum paneling." },
-  { title: "3. Prefab panels", text: "Load- and wind-bearing panels are designed using specific gauges and dimensions based on load requirements to support the building's complete superstructure." },
-  { title: "4. Structural steel", text: "Structural steel elements such as posts, angles, HSS and W sections, are included as required to provide added strength for point loading and to support larger spans." },
-  { title: "5. Lintels", text: "Steel stud/track or structural steel beams are installed above most windows and doorways to distribute load across open spans." },
-  { title: "6. Slab shoring", text: "When required, these temporary beams support the floor slab while the concrete is being poured and cured. They are strategically located to allow roughing in of interior walls on below floors." },
+  { title: "Floor assemblies", text: "A-Linx uses a variety of floor systems, including composite decks, hollow-core plank, open web steel joists, and standard C-joists." },
+  { title: "Exterior walls", text: "Exterior wall sections are typically shipped with insulation, air barrier and sheathing in place. They can also be shipped with a variety of pre-installed exterior finishes, i.e. EIFS, faux brick, hardy board or aluminum paneling." },
+  { title: "Prefab panels", text: "Load- and wind-bearing panels are designed using specific gauges and dimensions based on load requirements to support the building's complete superstructure." },
+  { title: "Structural steel", text: "Structural steel elements such as posts, angles, HSS and W sections, are included as required to provide added strength for point loading and to support larger spans." },
+  { title: "Lintels", text: "Steel stud/track or structural steel beams are installed above most windows and doorways to distribute load across open spans." },
+  { title: "Slab shoring", text: "When required, these temporary beams support the floor slab while the concrete is being poured and cured. They are strategically located to allow roughing in of interior walls on below floors." },
 ];
 
 const INCLUSIONS = [
@@ -166,10 +166,11 @@ function Hero() {
       <div className="pnl-hero-grid-overlay" aria-hidden />
       <div className="pnl-hero-inner">
         <Link href="/" className="inner-hero-back">
-          <svg viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7L9 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          <svg viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7L9 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
           Back
         </Link>
         <div className="pnl-hero-body">
+          <span className="pnl-hero-kicker" aria-hidden />
           <h1 className="pnl-hero-title">Panelized<br />Components</h1>
           <p className="pnl-hero-lead">
             A-Linx is a comprehensive supplier of panelized interior and fully-finished
@@ -177,6 +178,9 @@ function Hero() {
           </p>
         </div>
       </div>
+      <a href="#pnl-advantages" className="pnl-scroll-cue" aria-label="Scroll to explore">
+        <span className="pnl-scroll-cue-line" />
+      </a>
     </section>
   );
 }
@@ -187,6 +191,7 @@ function StructuralInnovation() {
     <section className="pnl-block pnl-block--light">
       <div className="pnl-container">
         <div className="pnl-editorial reveal">
+          <span className="pnl-kicker" aria-hidden />
           <h2 className="section-h2 pnl-section-h2">
             Structural innovation that makes off-site fabrication the undeniable option of choice
           </h2>
@@ -228,6 +233,7 @@ function FeatureSplit({
       <div className="pnl-container">
         <div className={`pnl-feature reveal${reverse ? " pnl-feature--reverse" : ""}`}>
           <div className="pnl-feature-copy">
+            <span className="pnl-kicker" aria-hidden />
             <h2 className="section-h2 pnl-section-h2">{title}</h2>
             {body && <p className="pnl-deck pnl-deck--wide">{body}</p>}
             {children}
@@ -274,6 +280,7 @@ function Advantages() {
     <section className="pnl-block pnl-block--dark" id="pnl-advantages">
       <div className="pnl-container">
         <h2 className="section-h2 pnl-section-h2 pnl-section-h2--light reveal">
+          <span className="pnl-kicker pnl-kicker--light" aria-hidden />
           Six advantages you can&apos;t afford to ignore:
         </h2>
         <div className="pnl-adv-grid">
@@ -289,6 +296,7 @@ function Advantages() {
           ))}
         </div>
         <h2 className="section-h2 pnl-section-h2 pnl-section-h2--light pnl-section-h2--spaced reveal">
+          <span className="pnl-kicker pnl-kicker--light" aria-hidden />
           ... and six more:
         </h2>
         <div className="pnl-adv-grid">
@@ -309,29 +317,194 @@ function Advantages() {
 }
 
 /* ─── SYSTEM ELEMENTS ────────────────────────────── */
+const MOBILE_HOTSPOT_MQ = "(max-width: 900px)";
+const MOBILE_MIN_HOTSPOT_RADIUS_PX = 15;
+
+function scaleSvgHotspots(root: HTMLElement) {
+  const svg = root.querySelector("svg");
+  if (!svg) return;
+
+  const mobile = window.matchMedia(MOBILE_HOTSPOT_MQ).matches;
+  const displayWidth = svg.getBoundingClientRect().width;
+  if (!displayWidth) return;
+
+  const vb = svg.viewBox.baseVal;
+  const pxPerUnit = displayWidth / vb.width;
+  const baseR = 51;
+  const scale = mobile
+    ? Math.max(1.375, MOBILE_MIN_HOTSPOT_RADIUS_PX / (baseR * pxPerUnit))
+    : 1;
+
+  root.querySelectorAll<SVGGElement>(".pnl-svg-hotspot").forEach((g) => {
+    const bg = g.querySelector(".pnl-svg-hotspot-bg");
+    if (!bg) return;
+    const cx = Number(bg.getAttribute("cx"));
+    const cy = Number(bg.getAttribute("cy"));
+    if (scale > 1) {
+      g.setAttribute("transform", `translate(${cx},${cy}) scale(${scale}) translate(${-cx},${-cy})`);
+    } else {
+      g.removeAttribute("transform");
+    }
+  });
+}
+
+function InteractiveDiagram() {
+  const rootRef = useRef<HTMLDivElement>(null);
+  const activeRef = useRef<number | null>(null);
+  const [current, setCurrent] = useState<number | null>(null);
+  const [ready, setReady] = useState(false);
+  const [tipPos, setTipPos] = useState<{ x: number; y: number; place: string } | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/images/panelized/panelized-systems.svg")
+      .then((r) => r.text())
+      .then((markup) => {
+        if (cancelled || !rootRef.current) return;
+        rootRef.current.innerHTML = markup;
+        setReady(true);
+      });
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    if (!ready || !rootRef.current) return;
+    const root = rootRef.current;
+
+    const syncActiveClass = (num: number | null) => {
+      root.querySelectorAll<SVGGElement>(".pnl-svg-hotspot").forEach((g) => {
+        g.classList.toggle("is-active", Number(g.dataset.num) === num);
+      });
+    };
+
+    const positionTip = (g: SVGGElement) => {
+      const circle = g.querySelector(".pnl-svg-hotspot-bg");
+      const svg = g.ownerSVGElement;
+      if (!circle || !svg) return;
+      const cx = Number(circle.getAttribute("cx"));
+      const cy = Number(circle.getAttribute("cy"));
+      const vb = svg.viewBox.baseVal;
+      setTipPos({
+        x: (cx / vb.width) * 100,
+        y: (cy / vb.height) * 100,
+        place: g.dataset.place ?? "right",
+      });
+    };
+
+    const onDoc = (e: PointerEvent) => {
+      if (!root.contains(e.target as Node)) {
+        activeRef.current = null;
+        setCurrent(null);
+        syncActiveClass(null);
+        setTipPos(null);
+      }
+    };
+
+    const cleanups: Array<() => void> = [];
+
+    root.querySelectorAll<SVGGElement>(".pnl-svg-hotspot").forEach((g) => {
+      const num = Number(g.dataset.num);
+
+      const onClick = (e: Event) => {
+        e.stopPropagation();
+        const next = activeRef.current === num ? null : num;
+        activeRef.current = next;
+        setCurrent(next);
+        syncActiveClass(next);
+        if (next === null) setTipPos(null);
+        else positionTip(g);
+      };
+      const onKey = (e: KeyboardEvent) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onClick(e);
+        }
+      };
+
+      g.addEventListener("click", onClick);
+      g.addEventListener("keydown", onKey);
+      cleanups.push(() => {
+        g.removeEventListener("click", onClick);
+        g.removeEventListener("keydown", onKey);
+      });
+    });
+
+    document.addEventListener("pointerdown", onDoc);
+    cleanups.push(() => document.removeEventListener("pointerdown", onDoc));
+
+    return () => cleanups.forEach((fn) => fn());
+  }, [ready]);
+
+  useEffect(() => {
+    if (!ready || !rootRef.current) return;
+    const root = rootRef.current;
+
+    const update = () => scaleSvgHotspots(root);
+    update();
+
+    const ro = new ResizeObserver(update);
+    ro.observe(root);
+    window.addEventListener("resize", update);
+    const mq = window.matchMedia(MOBILE_HOTSPOT_MQ);
+    mq.addEventListener("change", update);
+
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", update);
+      mq.removeEventListener("change", update);
+    };
+  }, [ready]);
+
+  const item = current !== null ? ELEMENTS[current - 1] : null;
+
+  return (
+    <div className="pnl-diagram-interactive reveal">
+      <div className="pnl-diagram-svg-wrap" ref={rootRef} />
+
+      {item && tipPos && (
+        <div
+          className={`pnl-hotspot-card pnl-hotspot-card--floating pnl-hotspot-card--${tipPos.place}`}
+          style={{ left: `${tipPos.x}%`, top: `${tipPos.y}%` }}
+          role="tooltip"
+        >
+          <div className="pnl-hotspot-card-accent" aria-hidden />
+          <div className="pnl-hotspot-card-inner">
+            <div className="pnl-system-title pnl-system-title--card">{item.title}</div>
+            <p className="pnl-system-text pnl-system-text--card">{item.text}</p>
+          </div>
+        </div>
+      )}
+
+      <p className="pnl-diagram-hint">Click an element to explore</p>
+
+      {item && (
+        <div className="pnl-hotspot-mobile-panel" aria-live="polite">
+          <div className="pnl-hotspot-card-accent" aria-hidden />
+          <div className="pnl-hotspot-card-inner">
+            <div className="pnl-system-title pnl-system-title--card">{item.title}</div>
+            <p className="pnl-system-text pnl-system-text--card">{item.text}</p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function PanelizedSystem() {
   return (
-    <section className="pnl-block pnl-block--light pnl-block--flush-top">
-      <div className="pnl-system-hero reveal">
-        <div className="pnl-system-hero-bg">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/images/panelized/panelized-systems.webp" alt="Panelized System" />
-        </div>
-        <div className="pnl-system-hero-content">
-          <h2 className="section-h2 pnl-section-h2 pnl-section-h2--hero">
+    <section className="pnl-block pnl-block--light">
+      <div className="pnl-container">
+        <div className="pnl-system-head reveal">
+          <span className="pnl-kicker" aria-hidden />
+          <h2 className="section-h2 pnl-section-h2">
             Elements of A-Linx panelized system
           </h2>
         </div>
-      </div>
-      <div className="pnl-container">
-        <div className="pnl-system-grid">
-          {ELEMENTS.map((e, i) => (
-            <div key={e.title} className={`pnl-system-card reveal${DELAY[i % 4]}`}>
-              <div className="pnl-system-title">{e.title}</div>
-              <p className="pnl-system-text">{e.text}</p>
-            </div>
-          ))}
+
+        <div className="pnl-diagram-frame pnl-diagram-frame--interactive">
+          <InteractiveDiagram />
         </div>
+
         <div className="pnl-inclusions reveal">
           <h3 className="pnl-inclusions-title">Typical inclusions not illustrated</h3>
           <div className="pnl-chip-row">
@@ -351,6 +524,7 @@ function PrecisionSection() {
     <section className="pnl-block pnl-block--cream">
       <div className="pnl-container">
         <h2 className="section-h2 pnl-section-h2 reveal">
+          <span className="pnl-kicker" aria-hidden />
           Precision, economy and a faster path to a watertight superstructure
         </h2>
         <div className="pnl-outcome-grid">
@@ -412,6 +586,7 @@ function SavingsSection() {
       <div className="pnl-container">
         <div className="pnl-savings-head reveal">
           <div className="pnl-savings-intro">
+            <span className="pnl-kicker" aria-hidden />
             <h2 className="section-h2 pnl-section-h2">Bottom-line savings that deliver a competitive edge</h2>
             <p className="pnl-deck pnl-deck--wide">
               The A-Linx Light-Gauge Steel system delivers a revolutionary competitive advantage -
@@ -476,11 +651,19 @@ function SavingsSection() {
 
 /* ─── STATS ──────────────────────────────────────── */
 function SavingsStats() {
+  const stats = [
+    { num: "35%", label: "FASTER SUPERSTRUCTURE BUILD" },
+    { num: "20%", label: "SUPERSTRUCTURE COST SAVINGS" },
+  ];
   return (
     <div className="pnl-stats-wrap">
       <div className="pnl-stats-banner">
-        <div className="pnl-stats-line reveal">35% FASTER SUPERSTRUCTURE BUILD</div>
-        <div className="pnl-stats-line reveal d1">20% SUPERSTRUCTURE COST SAVINGS</div>
+        {stats.map((s, i) => (
+          <div key={s.num} className={`pnl-stats-line reveal${DELAY[i]}`}>
+            <span className="pnl-stats-num">{s.num}</span>
+            <span className="pnl-stats-label">{s.label}</span>
+          </div>
+        ))}
       </div>
       <p className="pnl-stats-caption reveal">
         Typical A-Linx savings compared to conventional (cast-in-place) construction
