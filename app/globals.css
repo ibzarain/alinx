@@ -2373,6 +2373,89 @@ footer {
   .inner-hero-stats { gap: 2rem; }
 }
 
+/* ════════════════════════════════════════════════════
+   VOLUMETRIC PAGE — extends the panelized (.pnl-*) system
+   ════════════════════════════════════════════════════ */
+
+/* True Volumetric logo mark */
+.vol-logo {
+  display: block;
+  width: clamp(72px, 10vw, 96px);
+  height: auto;
+  margin-bottom: clamp(1.25rem, 2.5vw, 1.75rem);
+}
+
+/* Metaloq — stacked media frames in the feature column */
+.vol-media-stack { display: grid; gap: clamp(1rem, 2vw, 1.5rem); }
+.vol-media-stack .pnl-media-frame--tall { aspect-ratio: 3 / 2; }
+.vol-media-stack .pnl-media-frame { aspect-ratio: 16 / 9; }
+
+/* Disrupt — gallery row */
+.vol-gallery {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(1rem, 2vw, 1.5rem);
+  margin-top: clamp(2rem, 4vw, 3rem);
+}
+.vol-gallery .pnl-media-frame { aspect-ratio: 3 / 2; }
+
+/* Disrupt — prose + use cases two-up */
+.vol-feature-tight {
+  margin-top: clamp(2.5rem, 5vw, 3.5rem);
+  align-items: start;
+}
+.vol-feature-tight .pnl-feature-copy { order: unset !important; }
+.vol-prose-flush {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+  columns: 1;
+}
+.vol-usecases { margin-top: 0; }
+.vol-usecases .pnl-source-list { margin-top: 0.5rem; }
+
+/* Key benefits — 2-up dark cards with bullet lists */
+.pnl-adv-grid--quad { grid-template-columns: repeat(2, 1fr); }
+.pnl-adv-grid--quad .pnl-adv-card-top { margin-bottom: 0.4rem; justify-content: flex-end; }
+.pnl-adv-grid--quad .pnl-adv-card .pnl-adv-title {
+  font-size: clamp(1.15rem, 2vw, 1.4rem);
+  margin-bottom: 0.4rem;
+}
+.pnl-adv-grid--quad .pnl-source-list { margin-top: 1rem; }
+
+/* Light gauge steel — 2-up light outcome cards */
+.pnl-outcome-grid--quad { grid-template-columns: repeat(2, 1fr); }
+.pnl-outcome-grid--quad .pnl-outcome-title { font-size: clamp(1.1rem, 1.8vw, 1.3rem); }
+.pnl-outcome-grid--quad .pnl-source-list { margin-top: 0.85rem; }
+
+/* Closing — stacked full-width sections */
+.vol-closing-card { margin-top: 0; }
+.vol-closing-card--spaced { margin-top: clamp(2.5rem, 5vw, 3.5rem); }
+.vol-closing-card .pnl-section-h2 { max-width: none; margin-bottom: 1.25rem; }
+
+/* Key benefits — dual headings as on live site */
+.vol-key-benefits-kicker { margin-bottom: 0.5rem; }
+.vol-key-benefits-head { margin-top: 0; margin-bottom: 0; }
+
+/* Steel — "Faster and predictable" follows "The Result" */
+.vol-steel-faster {
+  margin-top: clamp(2rem, 4vw, 2.75rem);
+  padding: 2rem 1.85rem;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--olive);
+}
+
+@media (max-width: 900px) {
+  .vol-gallery { grid-template-columns: 1fr; }
+  .vol-feature-tight { gap: 2rem; }
+  .pnl-outcome-grid--quad,
+  .vol-closing-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 600px) {
+  .pnl-adv-grid--quad { grid-template-columns: 1fr; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
