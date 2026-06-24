@@ -11,12 +11,11 @@ import {
 } from "@/lib/hero-manifest";
 import {
   heroBeatScrollProgress,
-  HERO_HEADLINE_FADE_END,
+  headlineScrollStyle,
+  narrativeScrollStyle,
 } from "@/lib/hero-phases";
 import HeroMorphNarrative from "@/components/HeroMorphNarrative";
 import { useCallback, useEffect, useRef, useState } from "react";
-
-const HEADLINE_FADE_END = HERO_HEADLINE_FADE_END;
 
 function clamp(n: number, min: number, max: number) {
   return Math.min(max, Math.max(min, n));
@@ -43,7 +42,6 @@ export default function ScrollScrubHero() {
   const [useFrames, setUseFrames] = useState(true);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [headlineOpacity, setHeadlineOpacity] = useState(1);
 
   const drawImage = useCallback((source: CanvasImageSource, key: string) => {
     const canvas = canvasRef.current;
@@ -173,7 +171,6 @@ export default function ScrollScrubHero() {
     const p = scrollable <= 0 ? 0 : clamp(-rect.top / scrollable, 0, 1);
 
     setProgress(p);
-    setHeadlineOpacity(1 - clamp(p / HEADLINE_FADE_END, 0, 1));
 
     if (reducedMotion) {
       if (modeRef.current === "frames") {
@@ -341,7 +338,8 @@ export default function ScrollScrubHero() {
   }, [ready, updateFromScroll]);
 
   const beatProgress = heroBeatScrollProgress(progress);
-  const narrativeVisible = beatProgress > 0;
+  const headline = headlineScrollStyle(progress);
+  const narrative = narrativeScrollStyle(progress);
 
   return (
     <section
@@ -371,8 +369,9 @@ export default function ScrollScrubHero() {
         <div
           className="hero-content"
           style={{
-            opacity: headlineOpacity,
-            pointerEvents: headlineOpacity < 0.1 ? "none" : "auto",
+            transform: `translateY(${headline.translateY})`,
+            opacity: headline.opacity,
+            pointerEvents: headline.opacity < 0.1 ? "none" : "auto",
           }}
         >
           <h1 className="hero-h1">
@@ -396,7 +395,7 @@ export default function ScrollScrubHero() {
 
         <HeroMorphNarrative
           beatProgress={beatProgress}
-          visible={narrativeVisible}
+          heroProgress={progress}
           reducedMotion={reducedMotion}
         />
       </div>

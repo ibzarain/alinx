@@ -1,12 +1,9 @@
 {
   "frameCount": 240,
-  "startFrame": 39,
-  "endFrame": 240,
-  "endTimeSec": 10,
   "fps": 24,
   "pattern": "/hero/frames/frame_%04d.jpg",
   "width": 1920,
   "height": 1080,
   "videoSrc": "/building.mp4",
-  "cacheKey": "1782238190822.2068-8974092-240-39-240"
+  "cacheKey": "1782238190822.2068-8974092-240-full"
 }

@@ -4,32 +4,65 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
+const NAV_PROBE_Y = 36;
+
+const DARK_NAV_ZONE_SELECTOR = [
+  '[data-nav-theme="dark"]',
+  "#hero",
+  ".stats-strip",
+  "#technology",
+  "#team",
+  "footer",
+  ".pnl-hero",
+  ".inner-hero",
+  ".pnl-block--dark",
+  ".dark-feature-section",
+  ".pnl-band",
+  ".pnl-stats-wrap",
+].join(",");
+
+function zoneCoversNavProbe(el: Element): boolean {
+  const rect = el.getBoundingClientRect();
+  return rect.top <= NAV_PROBE_Y && rect.bottom > NAV_PROBE_Y;
+}
+
+function isOverDarkZone(): boolean {
+  if (
+    Array.from(document.querySelectorAll('[data-nav-theme="light"]')).some(
+      zoneCoversNavProbe
+    )
+  ) {
+    return false;
+  }
+  return Array.from(document.querySelectorAll(DARK_NAV_ZONE_SELECTOR)).some(
+    zoneCoversNavProbe
+  );
+}
+
 export default function Nav() {
   const [scrolled, setScrolled] = useState(false);
-  const [overHero, setOverHero] = useState(false);
+  const [overDark, setOverDark] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
     const update = () => {
-      const heroEl =
-        document.getElementById("hero") ??
-        document.querySelector(".pnl-hero, .inner-hero");
-      const heroShowing = heroEl
-        ? heroEl.getBoundingClientRect().bottom > 72
-        : false;
-      setOverHero(heroShowing);
-      setScrolled(!heroShowing);
+      setOverDark(isOverDarkZone());
+      setScrolled(window.scrollY > 8);
     };
     window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update, { passive: true });
     update();
-    return () => window.removeEventListener("scroll", update);
+    return () => {
+      window.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
   }, []);
 
   const close = () => setMobileOpen(false);
 
   return (
     <>
-      <nav className={`site-nav${scrolled ? " scrolled" : ""}${overHero ? " nav-over-hero" : ""}`}>
+      <nav className={`site-nav${scrolled ? " scrolled" : ""}${overDark ? " nav-over-dark" : ""}`}>
         <Link href="/" className="nav-logo">
           <Image
             src="/alinx-logo.png"
