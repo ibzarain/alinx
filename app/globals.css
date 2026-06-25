@@ -2928,7 +2928,11 @@ footer {
 .pnl-outcome-grid--quad .pnl-source-list { margin-top: 0.85rem; }
 
 /* Closing — stacked full-width sections */
-.vol-closing-card { margin-top: 0; }
+.vol-closing-card {
+  margin-top: 0;
+  padding: 2rem 1.85rem;
+  background: var(--bg2);
+}
 .vol-closing-card--spaced { margin-top: clamp(2.5rem, 5vw, 3.5rem); }
 .vol-closing-card .pnl-section-h2 { max-width: none; margin-bottom: 1.25rem; }
 
@@ -2936,16 +2940,48 @@ footer {
 .vol-key-benefits-kicker { margin-bottom: 0.5rem; }
 .vol-key-benefits-head { margin-top: 0; margin-bottom: 0; }
 
-/* Steel — "Faster and predictable" follows "The Result" */
-.vol-steel-faster {
-  margin-top: clamp(2rem, 4vw, 2.75rem);
-  padding: 2rem 1.85rem;
+/* Light gauge steel — separate polished cards */
+.steel-cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: clamp(1rem, 1.6vw, 1.35rem);
+  margin-top: clamp(2rem, 3.5vw, 3rem);
+}
+.steel-card {
+  position: relative;
+  padding: clamp(1.85rem, 2.6vw, 2.35rem) clamp(1.65rem, 2.2vw, 2.1rem);
   background: var(--bg2);
   border: 1px solid var(--border);
-  border-left: 3px solid var(--olive);
+  border-radius: 6px;
+  box-shadow: 0 8px 32px rgba(20, 24, 31, 0.06);
 }
+.steel-card-index {
+  display: block;
+  font-family: var(--font-barlow, 'Barlow Condensed', sans-serif);
+  font-size: clamp(2rem, 3.2vw, 2.75rem);
+  font-weight: 900;
+  line-height: 1;
+  margin-bottom: 0.65rem;
+  color: rgba(122, 158, 74, 0.22);
+}
+.steel-card-title {
+  font-family: var(--font-barlow, 'Barlow Condensed', sans-serif);
+  font-size: clamp(1.2rem, 2vw, 1.5rem);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text);
+  line-height: 1.12;
+  max-width: 22ch;
+}
+.steel-card .pnl-source-list { margin-top: 1.05rem; }
+.steel-card--wide {
+  grid-column: 1 / -1;
+}
+.steel-card--wide .steel-card-title { max-width: 36ch; }
 
 @media (max-width: 900px) {
+  .steel-cards { grid-template-columns: 1fr; }
   .vol-gallery { grid-template-columns: 1fr; }
   .vol-feature-tight { gap: 2rem; }
   .pnl-outcome-grid--quad,

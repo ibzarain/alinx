@@ -42,7 +42,7 @@ const KEY_BENEFITS = [
   },
 ];
 
-const STEEL_ADVANTAGES = [
+const STEEL_PILLARS = [
   {
     title: "Stronger and safer",
     points: [
@@ -68,12 +68,14 @@ const STEEL_ADVANTAGES = [
       "Precision-built components eliminate warping",
     ],
   },
-];
-
-const STEEL_FASTER = [
-  "Factory production shortens build schedules by thirty to fifty per cent",
-  "On site assembly completed in days",
-  "Immune to lumber price swings and weather delays",
+  {
+    title: "Faster and predictable",
+    points: [
+      "Factory production shortens build schedules by thirty to fifty per cent",
+      "On site assembly completed in days",
+      "Immune to lumber price swings and weather delays",
+    ],
+  },
 ];
 
 const STEEL_RESULT = [
@@ -177,28 +179,30 @@ function KeyBenefits() {
 
 function LightGaugeSteel() {
   return (
-    <section className="pnl-block pnl-block--cream">
+    <section className="pnl-block pnl-block--cream" id="light-gauge-steel">
       <div className="pnl-container">
         <h2 className="section-h2 pnl-section-h2 reveal">
           LIGHT GAUGE STEEL: A FUTURE-PROOF ADVANTAGE
         </h2>
-        <div className="pnl-outcome-grid pnl-outcome-grid--quad">
-          {STEEL_ADVANTAGES.map((s, i) => (
-            <div key={s.title} className={`pnl-outcome-card reveal${DELAY[i % 2]}`}>
-              <div className="pnl-outcome-title">{s.title}</div>
-              <SourceList items={s.points} />
-            </div>
+
+        <div className="steel-cards">
+          {STEEL_PILLARS.map((p, i) => (
+            <article key={p.title} className={`steel-card reveal${DELAY[i % 2]}`}>
+              <span className="steel-card-index">{String(i + 1).padStart(2, "0")}</span>
+              <h3 className="steel-card-title">{p.title}</h3>
+              <SourceList items={p.points} />
+            </article>
           ))}
-        </div>
-        <div className="pnl-inclusions reveal">
-          <h3 className="pnl-inclusions-title">
-            The Result: a repeatable and adaptable building solution that is:
-          </h3>
-          <SourceList items={STEEL_RESULT} />
-        </div>
-        <div className="pnl-outcome-card reveal vol-steel-faster">
-          <div className="pnl-outcome-title">Faster and predictable</div>
-          <SourceList items={STEEL_FASTER} />
+
+          <article className="steel-card steel-card--wide reveal d2">
+            <span className="steel-card-index">
+              {String(STEEL_PILLARS.length + 1).padStart(2, "0")}
+            </span>
+            <h3 className="steel-card-title">
+              The Result: a repeatable and adaptable building solution that is:
+            </h3>
+            <SourceList items={STEEL_RESULT} />
+          </article>
         </div>
       </div>
     </section>
@@ -222,7 +226,7 @@ function Closing() {
   return (
     <section className="pnl-block pnl-block--light">
       <div className="pnl-container">
-        <div className="pnl-outcome-card reveal vol-closing-card">
+        <div className="vol-closing-card reveal">
           <h2 className="section-h2 pnl-section-h2">A fully certified CSA facility</h2>
           <p className="pnl-outcome-text">
             Alinx operates as a fully certified CSA A277 facility, demonstrating our commitment to
@@ -234,7 +238,7 @@ function Closing() {
             every project.
           </p>
         </div>
-        <div className="pnl-outcome-card reveal d1 vol-closing-card vol-closing-card--spaced">
+        <div className="vol-closing-card vol-closing-card--spaced reveal d1">
           <h2 className="section-h2 pnl-section-h2">
             Backed by a broadly diversified enterprise that allows us to self perform across a
             variety of construction disciplines
