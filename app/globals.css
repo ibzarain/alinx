@@ -54,7 +54,7 @@ nav.site-nav {
   background: rgba(248,247,243,0.96);
   backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--border);
-  transition: background 0.4s, border-color 0.4s, box-shadow 0.4s;
+  transition: border-color 0.3s, box-shadow 0.3s;
 }
 nav.site-nav.scrolled {
   border-bottom-color: var(--border);
@@ -69,6 +69,22 @@ nav.site-nav.nav-over-dark {
 }
 nav.site-nav.nav-over-dark.scrolled {
   background: rgba(10,13,20,0.72);
+}
+
+/* Before React hydrates — dark heroes sit under the nav at scroll 0 */
+html.nav-over-dark-initial nav.site-nav {
+  background: rgba(10,13,20,0.42);
+  border-bottom-color: transparent;
+  box-shadow: none;
+}
+html.nav-over-dark-initial nav.site-nav .nav-logo-img {
+  filter: brightness(0) invert(1);
+}
+html.nav-over-dark-initial nav.site-nav .nav-links a {
+  color: rgba(240,237,230,0.65);
+}
+html.nav-over-dark-initial nav.site-nav .nav-hamburger span {
+  background: #fff;
 }
 
 .nav-logo {
@@ -201,14 +217,20 @@ nav.site-nav.nav-over-dark .nav-hamburger span { background: #fff; }
   background: #08090e;
 }
 
-/* Vignette — nav legibility only; frames stay bright */
+/* Vignette — legibility over video without boxing content */
 .scroll-hero-vignette {
   position: absolute;
   inset: 0;
   z-index: 2;
   pointer-events: none;
   background:
-    linear-gradient(to bottom, rgba(5,7,12,0.5) 0%, rgba(5,7,12,0.12) 12%, transparent 28%);
+    linear-gradient(
+      105deg,
+      rgba(5, 7, 12, 0.72) 0%,
+      rgba(5, 7, 12, 0.28) 42%,
+      transparent 68%
+    ),
+    linear-gradient(to bottom, rgba(5, 7, 12, 0.45) 0%, transparent 22%);
 }
 
 .hero-content {
@@ -216,8 +238,16 @@ nav.site-nav.nav-over-dark .nav-hamburger span { background: #fff; }
   z-index: 10;
   left: 6%;
   top: 18%;
-  max-width: 600px;
+  max-width: 52rem;
   will-change: transform, opacity;
+}
+
+.hero-kicker {
+  display: block;
+  width: 3.25rem;
+  height: 2px;
+  background: var(--olive);
+  margin-bottom: 1.75rem;
 }
 
 .hero-eyebrow {
@@ -233,36 +263,74 @@ nav.site-nav.nav-over-dark .nav-hamburger span { background: #fff; }
 
 .hero-h1 {
   font-family: var(--font-barlow, 'Barlow Condensed', sans-serif);
-  font-size: clamp(3.5rem, 6.5vw, 7rem);
-  font-weight: 900; line-height: 0.93;
-  text-transform: uppercase; letter-spacing: 0.02em;
+  font-size: clamp(3.8rem, 7.5vw, 7.5rem);
+  font-weight: 900;
+  line-height: 0.9;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
   margin-bottom: 1.5rem;
-  text-shadow: 0 2px 24px rgba(0,0,0,0.55), 0 1px 6px rgba(0,0,0,0.45);
 }
-/* Hero text always stays light — video canvas is behind */
-.hero-h1 .line1 { color: var(--hero-text); display: block; }
-.hero-h1 .line2 { color: var(--olive); display: block; }
+.hero-h1 .line1 {
+  color: var(--hero-text);
+  display: block;
+}
+.hero-h1 .line2 {
+  color: var(--olive);
+  display: block;
+}
 .hero-h1 .line3 {
   color: var(--hero-text2); display: block;
   font-size: 0.6em; font-weight: 600; letter-spacing: 0.08em; margin-top: 0.4rem;
 }
 
 .hero-sub {
-  font-size: 1rem; color: var(--hero-text2);
-  line-height: 1.7; max-width: 480px; margin-bottom: 2.5rem;
-  text-shadow: 0 1px 12px rgba(0,0,0,0.6);
+  font-size: clamp(1.1rem, 1.6vw, 1.35rem);
+  font-weight: 400;
+  color: rgba(240, 237, 230, 0.78);
+  line-height: 1.5;
+  margin-bottom: 2.25rem;
+  white-space: nowrap;
 }
 
-.hero-actions { display: flex; gap: 1rem; flex-wrap: wrap; }
+.hero-actions {
+  display: flex;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
 
-/* Ghost button variant for hero (always on dark video) */
-.hero-actions .btn-ghost {
-  border-color: var(--hero-border);
+.btn-hero {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.9rem 2.2rem;
+  font-family: var(--font-barlow, 'Barlow Condensed', sans-serif);
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: background 0.2s, border-color 0.2s, color 0.2s, transform 0.2s;
+}
+.btn-hero--fill {
+  background: var(--olive);
+  color: #fff;
+  border: 1px solid var(--olive);
+}
+.btn-hero--fill:hover {
+  background: var(--olive2);
+  border-color: var(--olive2);
+  transform: translateY(-2px);
+}
+.btn-hero--line {
+  background: transparent;
   color: var(--hero-text);
+  border: 1px solid rgba(240, 237, 230, 0.35);
 }
-.hero-actions .btn-ghost:hover {
-  border-color: var(--olive);
-  color: var(--olive);
+.btn-hero--line:hover {
+  border-color: var(--hero-text);
+  color: #fff;
+  transform: translateY(-2px);
 }
 
 /* Scroll-driven narrative — large morphing words + contextual stats */
@@ -301,6 +369,8 @@ nav.site-nav.nav-over-dark .nav-hamburger span { background: #fff; }
   margin: 0;
   padding: 0;
   pointer-events: none;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
 }
 
 .hero-narrative-fallback {
@@ -316,10 +386,9 @@ nav.site-nav.nav-over-dark .nav-hamburger span { background: #fff; }
   line-height: 0.93;
   letter-spacing: 0.02em;
   text-transform: uppercase;
-  color: var(--hero-text);
+  color: var(--bg3);
   text-align: left;
   white-space: nowrap;
-  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.55);
   pointer-events: none;
 }
 
@@ -576,9 +645,9 @@ nav.site-nav.nav-over-dark .nav-hamburger span { background: #fff; }
   pointer-events: none;
   background: linear-gradient(
     to bottom,
-    rgba(8, 10, 14, 0.72) 0%,
-    rgba(8, 10, 14, 0.78) 45%,
-    rgba(8, 10, 14, 0.88) 100%
+    rgba(8, 10, 14, 0.48) 0%,
+    rgba(8, 10, 14, 0.55) 45%,
+    rgba(8, 10, 14, 0.65) 100%
   );
 }
 
@@ -627,12 +696,12 @@ nav.site-nav.nav-over-dark .nav-hamburger span { background: #fff; }
 }
 .svc-card .svc-h3 {
   font-family: var(--font-barlow, 'Barlow Condensed', sans-serif);
-  font-size: 2.2rem;
+  font-size: clamp(2.5rem, 3.8vw, 3.25rem);
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   margin-bottom: 1rem;
-  line-height: 1.05;
+  line-height: 1.02;
   color: #f0ede6;
   text-shadow: 0 2px 24px rgba(0, 0, 0, 0.5);
 }
@@ -1622,7 +1691,11 @@ footer {
   .stats-strip { grid-template-columns: repeat(2,1fr); }
   #hero.scroll-hero { height: 440vh; }
   .hero-content { top: 14%; left: 5%; max-width: 92%; }
-  .hero-h1 { font-size: clamp(2.5rem, 10vw, 4rem); }
+  .hero-h1 { font-size: clamp(2.75rem, 10vw, 4.25rem); }
+  .hero-sub {
+    white-space: normal;
+    max-width: 36rem;
+  }
   .steel-features { grid-template-columns: 1fr; }
 }
 @media (max-width: 600px) {

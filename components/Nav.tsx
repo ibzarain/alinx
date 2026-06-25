@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useLayoutEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 const NAV_PROBE_Y = 36;
 
@@ -48,29 +49,35 @@ function isOverDarkZone(): boolean {
 }
 
 export default function Nav() {
+  const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [overDark, setOverDark] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
+    document.documentElement.classList.remove("nav-over-dark-initial");
+
     const update = () => {
       setOverDark(isOverDarkZone());
       setScrolled(window.scrollY > 8);
     };
+
+    update();
     window.addEventListener("scroll", update, { passive: true });
     window.addEventListener("resize", update, { passive: true });
-    update();
     return () => {
       window.removeEventListener("scroll", update);
       window.removeEventListener("resize", update);
     };
-  }, []);
+  }, [pathname]);
 
   const close = () => setMobileOpen(false);
 
   return (
     <>
-      <nav className={`site-nav${scrolled ? " scrolled" : ""}${overDark ? " nav-over-dark" : ""}`}>
+      <nav
+        className={`site-nav${scrolled ? " scrolled" : ""}${overDark ? " nav-over-dark" : ""}`}
+      >
         <Link href="/" className="nav-logo">
           <Image
             src="/alinx-logo.png"
@@ -89,13 +96,17 @@ export default function Nav() {
             </li>
           ))}
         </ul>
-        <a href="tel:2267247219" className="nav-cta">226-724-7219</a>
+        <a href="tel:2267247219" className="nav-cta">
+          226-724-7219
+        </a>
         <button
           className={`nav-hamburger${mobileOpen ? " open" : ""}`}
           onClick={() => setMobileOpen((o) => !o)}
           aria-label="Toggle menu"
         >
-          <span /><span /><span />
+          <span />
+          <span />
+          <span />
         </button>
       </nav>
 
@@ -105,7 +116,9 @@ export default function Nav() {
             {item.label}
           </Link>
         ))}
-        <a href="tel:2267247219" className="mobile-cta" onClick={close}>226-724-7219</a>
+        <a href="tel:2267247219" className="mobile-cta" onClick={close}>
+          226-724-7219
+        </a>
       </nav>
     </>
   );

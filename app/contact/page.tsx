@@ -2,7 +2,6 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
-import Nav from "@/components/Nav";
 import SiteFooter from "@/components/SiteFooter";
 
 function useScrollReveal() {
@@ -103,7 +102,6 @@ export default function ContactPage() {
 
   return (
     <div className="pnl-page">
-      <Nav />
       <Hero />
       <ContactBody />
       <SiteFooter />

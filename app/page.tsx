@@ -3,7 +3,6 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import ScrollScrubHero from "@/components/ScrollScrubHero";
-import Nav from "@/components/Nav";
 import SiteFooter from "@/components/SiteFooter";
 
 const DELAY = ["", " d1", " d2", " d3"];
@@ -274,7 +273,6 @@ export default function Home() {
 
   return (
     <>
-      <Nav />
       <ScrollScrubHero />
       <div className="pnl-page">
         <Services />

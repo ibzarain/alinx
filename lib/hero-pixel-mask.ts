@@ -1,11 +1,17 @@
 /**
- * Hero pixel morph — Barlow Condensed rasterized to a fine grid, flush pixels.
+ * Hero pixel morph — square grid with smooth edge sub-pixels.
  */
+
+/** Subdivisions per grid cell for edge smoothing (4×4 → 16-bit mask). */
+const CELL_SUB = 4;
+const FULL_SUB_MASK = (1 << (CELL_SUB * CELL_SUB)) - 1;
 
 export type PixelCell = {
   gx: number;
   gy: number;
   order: number;
+  /** Bitmask of filled sub-pixels; all bits set = one full square */
+  subMask: number;
 };
 
 export type WordMask = {
@@ -42,11 +48,27 @@ export type MorphDrawState = {
   dissolve: number;
 };
 
-/** Finer sample grid — smaller display blocks */
+/** Sample grid — sharp square pixels */
 export const GRID_COLS = 240;
 export const GRID_ROWS = 52;
 
-const TEXT = "#ffffff";
+const HERO_PIXEL_COLOR_FALLBACK = "#f0ede6";
+
+let cachedPixelColor: string | null = null;
+
+/** Matches --bg3 (cream section below hero). */
+function heroPixelColor(): string {
+  if (cachedPixelColor) return cachedPixelColor;
+  if (typeof document === "undefined") {
+    cachedPixelColor = HERO_PIXEL_COLOR_FALLBACK;
+    return cachedPixelColor;
+  }
+  const value = getComputedStyle(document.documentElement)
+    .getPropertyValue("--bg3")
+    .trim();
+  cachedPixelColor = value || HERO_PIXEL_COLOR_FALLBACK;
+  return cachedPixelColor;
+}
 
 function hash(x: number, y: number, s = 0): number {
   const n = Math.sin(x * 12.9898 + y * 78.233 + s * 43.758) * 43758.5453;
@@ -95,7 +117,7 @@ export function resolveHeroFontFamily(): string {
 export async function ensureHeroFonts(style: HeroFontStyle): Promise<void> {
   await document.fonts.ready;
   const sizes = [12, 16, 20, 24, 28, 32, 36, 40, 48, 56, 64, 72, 80];
-  const weights = [style.weight, 900];
+  const weights = [style.weight, 800, 700];
   await Promise.all(
     weights.flatMap((weight) =>
       sizes.map((size) =>
@@ -122,18 +144,20 @@ function measureTrackedWidth(
   return w;
 }
 
-function drawTrackedText(
+function paintTrackedText(
   ctx: CanvasRenderingContext2D,
   text: string,
   x: number,
   y: number,
   fontSize: number,
-  trackingEm: number
+  trackingEm: number,
+  mode: "fill" | "stroke"
 ) {
   const tracking = fontSize * trackingEm;
   let cursor = x;
   for (let i = 0; i < text.length; i++) {
-    ctx.fillText(text[i], cursor, y);
+    if (mode === "stroke") ctx.strokeText(text[i], cursor, y);
+    else ctx.fillText(text[i], cursor, y);
     cursor += ctx.measureText(text[i]).width;
     if (i < text.length - 1) cursor += tracking;
   }
@@ -177,21 +201,36 @@ function sampleRaster(
   text: string,
   cols: number,
   rows: number,
-  cellSize: number
+  cellSize: number,
+  sub: number
 ): Omit<WordMask, "offsetX" | "offsetY"> | null {
   const cells: PixelCell[] = [];
+  const pixelCols = cols * sub;
 
   for (let gy = 0; gy < rows; gy++) {
     for (let gx = 0; gx < cols; gx++) {
-      const i = (gy * cols + gx) * 4;
-      if (data[i] > 140 && data[i + 1] > 140 && data[i + 2] > 140) {
-        cells.push({ gx, gy, order: hash(gx, gy, text.length) });
+      let subMask = 0;
+
+      for (let sy = 0; sy < sub; sy++) {
+        for (let sx = 0; sx < sub; sx++) {
+          const px = gx * sub + sx;
+          const py = gy * sub + sy;
+          const i = (py * pixelCols + px) * 4;
+          const lum = data[i];
+          const alpha = data[i + 3];
+          if (alpha > 100 && lum > 88) {
+            subMask |= 1 << (sy * sub + sx);
+          }
+        }
       }
+
+      if (subMask === 0) continue;
+      cells.push({ gx, gy, order: hash(gx, gy, text.length), subMask });
     }
   }
 
   if (cells.length < 20) return null;
-  if (cells.length > cols * rows * 0.48) return null;
+  if (cells.length > cols * rows * 0.52) return null;
 
   const trimmed = trimDanglingBottomRows(cells);
   if (trimmed.length < 20) return null;
@@ -267,38 +306,45 @@ function rasterizeOnce(
   const measure = document.createElement("canvas").getContext("2d");
   if (!measure) return null;
 
-  let size = fontSize;
+  const pixelCols = cols * CELL_SUB;
+  const pixelRows = rows * CELL_SUB;
+
+  let size = fontSize * CELL_SUB;
   const setFont = (s: number) => {
     measure.font = `${style.weight} ${s}px ${style.family}`;
   };
 
   setFont(size);
-  while (measureTrackedWidth(measure, text, style.trackingEm, size) > cols * 0.94 && size > 10) {
+  while (
+    measureTrackedWidth(measure, text, style.trackingEm, size) > pixelCols * 0.94 &&
+    size > 10 * CELL_SUB
+  ) {
     size -= 1;
     setFont(size);
   }
 
   const off = document.createElement("canvas");
-  off.width = cols;
-  off.height = rows;
+  off.width = pixelCols;
+  off.height = pixelRows;
   const ctx = off.getContext("2d", { willReadFrequently: true });
   if (!ctx) return null;
 
-  ctx.imageSmoothingEnabled = false;
+  ctx.imageSmoothingEnabled = true;
   ctx.fillStyle = "#000";
-  ctx.fillRect(0, 0, cols, rows);
+  ctx.fillRect(0, 0, pixelCols, pixelRows);
   ctx.fillStyle = "#fff";
   ctx.font = `${style.weight} ${size}px ${style.family}`;
   ctx.textBaseline = "bottom";
   ctx.textAlign = "left";
-  drawTrackedText(ctx, text, 0, rows - 1, size, style.trackingEm);
+  paintTrackedText(ctx, text, 0, pixelRows - 1, size, style.trackingEm, "fill");
 
   return sampleRaster(
-    ctx.getImageData(0, 0, cols, rows).data,
+    ctx.getImageData(0, 0, pixelCols, pixelRows).data,
     text,
     cols,
     rows,
-    cellSize
+    cellSize,
+    CELL_SUB
   );
 }
 
@@ -407,33 +453,57 @@ export function drawMorphFrame(
   ctx.clearRect(0, 0, width, height);
   if (alpha <= 0.004) return;
 
+  const pixelColor = heroPixelColor();
+
   const drawCell = (
     mask: WordMask,
-    gx: number,
-    gy: number,
+    cell: PixelCell,
     scatter = 0
   ) => {
-    let x = (gx - bounds.minGx) * cellSize;
+    let x = (cell.gx - bounds.minGx) * cellSize;
     let y =
-      (gy - bounds.minGy) * cellSize +
+      (cell.gy - bounds.minGy) * cellSize +
       (bounds.maxGy - mask.maxGy) * cellSize;
 
     if (scatter > 0) {
       const j = scatter * cellSize * 1.8;
-      x += (hash(gx, gy, 2) - 0.5) * j;
-      y += (hash(gx, gy, 7) - 0.5) * j;
+      x += (hash(cell.gx, cell.gy, 2) - 0.5) * j;
+      y += (hash(cell.gx, cell.gy, 7) - 0.5) * j;
     }
 
     ctx.globalAlpha = alpha;
-    ctx.fillStyle = TEXT;
-    const size = cellSize + 1;
-    ctx.fillRect(Math.floor(x), Math.floor(y), size, size);
+    ctx.fillStyle = pixelColor;
+
+    const block = cellSize + 1;
+    const ix = Math.floor(x);
+    const iy = Math.floor(y);
+
+    if (cell.subMask === FULL_SUB_MASK) {
+      ctx.fillRect(ix, iy, block, block);
+      return;
+    }
+
+    const subSpan = cellSize / CELL_SUB;
+    const subSize = Math.ceil(subSpan) + 1;
+    for (let sy = 0; sy < CELL_SUB; sy++) {
+      for (let sx = 0; sx < CELL_SUB; sx++) {
+        const bit = sy * CELL_SUB + sx;
+        if ((cell.subMask >> bit) & 1) {
+          ctx.fillRect(
+            Math.floor(ix + sx * subSpan),
+            Math.floor(iy + sy * subSpan),
+            subSize,
+            subSize
+          );
+        }
+      }
+    }
   };
 
   if (state.mode === "assemble") {
     for (const cell of from.cells) {
       if (cell.order > state.reveal) continue;
-      drawCell(from, cell.gx, cell.gy);
+      drawCell(from, cell);
     }
     ctx.globalAlpha = 1;
     return;
@@ -441,7 +511,7 @@ export function drawMorphFrame(
 
   if (state.mode === "hold") {
     for (const cell of from.cells) {
-      drawCell(from, cell.gx, cell.gy);
+      drawCell(from, cell);
     }
     ctx.globalAlpha = 1;
     return;
@@ -450,7 +520,7 @@ export function drawMorphFrame(
   if (state.mode === "dissolve") {
     for (const cell of from.cells) {
       if (cell.order < state.dissolve * 0.85) continue;
-      drawCell(from, cell.gx, cell.gy, state.dissolve);
+      drawCell(from, cell, state.dissolve);
     }
     ctx.globalAlpha = 1;
     return;
@@ -461,13 +531,13 @@ export function drawMorphFrame(
     const d = t / 0.45;
     for (const cell of from.cells) {
       if (cell.order < d * 0.85) continue;
-      drawCell(from, cell.gx, cell.gy, d * 0.95);
+      drawCell(from, cell, d * 0.95);
     }
   } else if (to) {
     const r = (t - 0.45) / 0.55;
     for (const cell of to.cells) {
       if (cell.order > r) continue;
-      drawCell(to, cell.gx, cell.gy, (1 - r) * 0.7);
+      drawCell(to, cell, (1 - r) * 0.7);
     }
   }
 

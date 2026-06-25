@@ -15,6 +15,7 @@ import {
   narrativeScrollStyle,
 } from "@/lib/hero-phases";
 import HeroMorphNarrative from "@/components/HeroMorphNarrative";
+import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 function clamp(n: number, min: number, max: number) {
@@ -374,22 +375,21 @@ export default function ScrollScrubHero() {
             pointerEvents: headline.opacity < 0.1 ? "none" : "auto",
           }}
         >
+          <span className="hero-kicker" aria-hidden />
           <h1 className="hero-h1">
             <span className="line1">Vertically</span>
             <span className="line2">Integrated.</span>
           </h1>
           <p className="hero-sub">
-            Factory-engineered modular structures and panelized systems built to
-            manufacturing tolerances, delivered 35% faster and 20% more
-            economically than conventional construction.
+            Factory-built modular and panelized systems.
           </p>
           <div className="hero-actions">
-            <a href="#services" className="btn-primary">
-              Explore Solutions
-            </a>
-            <a href="#projects" className="btn-ghost">
-              View Projects
-            </a>
+            <Link href="/projects" className="btn-hero btn-hero--fill">
+              Our Projects
+            </Link>
+            <Link href="/about" className="btn-hero btn-hero--line">
+              About us
+            </Link>
           </div>
         </div>
 

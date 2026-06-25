@@ -20,7 +20,7 @@ type HeroPixelMorphProps = {
   reducedMotion?: boolean;
 };
 
-/** Small pixel blocks — scales with viewport, no 2× boost */
+/** Sharp square pixels — scales with viewport */
 function cellSizeForViewport(): number {
   const vw = window.innerWidth;
   const fit = Math.floor(vw / GRID_COLS);

@@ -2,7 +2,6 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
-import Nav from "@/components/Nav";
 import SiteFooter from "@/components/SiteFooter";
 
 const DELAY_CLASSES = ["", " d1", " d2", " d3"];
@@ -60,7 +59,6 @@ export default function ProjectsPage() {
 
   return (
     <div className="pnl-page">
-      <Nav />
       <Hero />
       <section id="projects-grid" className="pnl-block pnl-block--light">
         <div className="pnl-container">

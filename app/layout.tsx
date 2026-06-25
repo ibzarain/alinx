@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Barlow_Condensed, DM_Sans, Space_Mono } from "next/font/google";
+import Nav from "@/components/Nav";
 import "./globals.css";
 
 const barlowCondensed = Barlow_Condensed({
@@ -36,7 +37,15 @@ export default function RootLayout({
       lang="en"
       className={`${barlowCondensed.variable} ${dmSans.variable} ${spaceMono.variable} h-full antialiased`}
     >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{if((window.scrollY||0)<16)document.documentElement.classList.add("nav-over-dark-initial")}catch(e){}})();`,
+          }}
+        />
+      </head>
       <body className="min-h-full flex flex-col">
+        <Nav />
         <span data-hero-font-probe className="hero-pixel-font-probe" aria-hidden>
           A
         </span>

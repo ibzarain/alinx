@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import Nav from "@/components/Nav";
 import SiteFooter from "@/components/SiteFooter";
 
 const DELAY_CLASSES = ["", " d1", " d2", " d3"];
@@ -156,7 +155,6 @@ export default function AboutPage() {
 
   return (
     <div className="pnl-page">
-      <Nav />
       <Hero />
       <AboutCopy />
       <Team />

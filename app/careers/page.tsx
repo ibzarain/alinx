@@ -2,7 +2,6 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
-import Nav from "@/components/Nav";
 import SiteFooter from "@/components/SiteFooter";
 
 function useScrollReveal() {
@@ -40,7 +39,6 @@ export default function CareersPage() {
 
   return (
     <div className="pnl-page">
-      <Nav />
       <Hero />
       <section className="pnl-block pnl-block--light careers-page-body">
         <div className="pnl-container">
