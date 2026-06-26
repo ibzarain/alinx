@@ -160,15 +160,12 @@ function KeyBenefits() {
         <h2 className="section-h2 pnl-section-h2 pnl-section-h2--light reveal d1 vol-key-benefits-head">
           MODULAR CONSTRUCTION SIMPLY MAKES BETTER SENSE
         </h2>
-        <div className="pnl-adv-grid pnl-adv-grid--quad">
+        <div className="key-benefits-grid">
           {KEY_BENEFITS.map((b, i) => (
-            <div key={b.title} className={`pnl-adv-card reveal${DELAY[i % 2]}`}>
-              <div className="pnl-adv-card-top">
-                <span className="pnl-adv-index">{String(i + 1).padStart(2, "0")}</span>
-              </div>
-              <div className="pnl-adv-title">{b.title}</div>
+            <article key={b.title} className={`key-benefit-card reveal${DELAY[i % 2]}`}>
+              <h3 className="key-benefit-title">{b.title}</h3>
               <SourceList items={b.points} dark />
-            </div>
+            </article>
           ))}
         </div>
       </div>
@@ -187,14 +184,16 @@ function LightGaugeSteel() {
         <div className="steel-cards">
           {STEEL_PILLARS.map((p, i) => (
             <article key={p.title} className={`steel-card reveal${DELAY[i % 2]}`}>
-              <span className="steel-card-index">{String(i + 1).padStart(2, "0")}</span>
+              <span className="steel-card-index" aria-hidden>
+                {String(i + 1).padStart(2, "0")}
+              </span>
               <h3 className="steel-card-title">{p.title}</h3>
               <SourceList items={p.points} />
             </article>
           ))}
 
           <article className="steel-card steel-card--wide reveal d2">
-            <span className="steel-card-index">
+            <span className="steel-card-index" aria-hidden>
               {String(STEEL_PILLARS.length + 1).padStart(2, "0")}
             </span>
             <h3 className="steel-card-title">

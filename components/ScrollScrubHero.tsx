@@ -388,7 +388,7 @@ export default function ScrollScrubHero() {
               Our Projects
             </Link>
             <Link href="/about" className="btn-hero btn-hero--line">
-              About us
+              Meet the Team
             </Link>
           </div>
         </div>

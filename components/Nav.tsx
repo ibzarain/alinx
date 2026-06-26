@@ -12,7 +12,7 @@ const DARK_NAV_ZONE_SELECTOR = [
   "#hero",
   ".stats-strip",
   "#technology",
-  "#team",
+  ".page-hero-band",
   "footer",
   ".pnl-hero",
   ".inner-hero",
@@ -27,7 +27,6 @@ const NAV_LINKS = [
   { href: "/volumetric", label: "Volumetric" },
   { href: "/about", label: "About" },
   { href: "/projects", label: "Projects" },
-  { href: "/contact", label: "Contact" },
 ] as const;
 
 function zoneCoversNavProbe(el: Element): boolean {

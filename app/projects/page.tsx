@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import Link from "next/link";
+import PageHead from "@/components/PageHead";
 import SiteFooter from "@/components/SiteFooter";
 
 const DELAY_CLASSES = ["", " d1", " d2", " d3"];
@@ -32,34 +32,16 @@ function useScrollReveal() {
   }, []);
 }
 
-function Hero() {
-  return (
-    <section className="pnl-hero">
-      <div className="pnl-hero-bg" aria-hidden />
-      <div className="pnl-hero-grid-overlay" aria-hidden />
-      <div className="pnl-hero-inner">
-        <Link href="/" className="inner-hero-back">
-          <svg viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7L9 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
-          Back
-        </Link>
-        <div className="pnl-hero-body">
-          <span className="pnl-hero-kicker" aria-hidden />
-          <h1 className="pnl-hero-title">Projects</h1>
-        </div>
-      </div>
-      <a href="#projects-grid" className="pnl-scroll-cue" aria-label="Scroll to explore">
-        <span className="pnl-scroll-cue-line" />
-      </a>
-    </section>
-  );
-}
-
 export default function ProjectsPage() {
   useScrollReveal();
 
   return (
     <div className="pnl-page">
-      <Hero />
+      <section className="page-hero-band" data-nav-theme="dark">
+        <div className="pnl-container">
+          <PageHead title="Projects" theme="dark" />
+        </div>
+      </section>
       <section id="projects-grid" className="pnl-block pnl-block--light">
         <div className="pnl-container">
           <div className="projects-photo-grid projects-photo-grid--page">
@@ -72,8 +54,10 @@ export default function ProjectsPage() {
                 className={`proj-photo-card reveal${DELAY_CLASSES[i % 4]}`}
               >
                 <div className="proj-photo-wrap">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={p.image} alt={p.name} loading="lazy" />
+                  <div className="proj-photo-crop">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={p.image} alt={p.name} loading="lazy" />
+                  </div>
                   <span className="proj-photo-pdf" aria-hidden>PDF</span>
                 </div>
                 <div className="proj-photo-name">{p.name}</div>
