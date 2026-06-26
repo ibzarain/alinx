@@ -35,6 +35,7 @@
 
 html {
   scroll-behavior: smooth;
+  scrollbar-gutter: stable;
 }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
@@ -202,11 +203,53 @@ nav.site-nav.nav-over-dark .nav-hamburger span { background: #fff; }
   z-index: 0;
 }
 
+html.hero-scroll-lock {
+  overflow: hidden;
+}
+
+html.hero-scroll-lock nav.site-nav {
+  padding-right: calc(5% + var(--hero-lock-scrollbar, 0px));
+}
+
 .scroll-hero-loading {
-  position: absolute;
+  position: fixed;
   inset: 0;
-  z-index: 1;
-  background: #08090e;
+  z-index: 10001;
+  background: var(--bg3);
+  transform: translateY(0);
+  transition: transform 1.05s cubic-bezier(0.76, 0, 0.24, 1);
+  will-change: transform;
+}
+
+.scroll-hero-loading--reveal {
+  transform: translateY(-100%);
+}
+
+.hero-load-percent {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  display: flex;
+  align-items: baseline;
+  pointer-events: none;
+  line-height: 0.82;
+  font-family: var(--font-barlow, 'Barlow Condensed', sans-serif);
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  color: var(--olive);
+}
+
+.hero-load-percent-num {
+  font-size: clamp(8rem, 38vw, 26rem);
+  font-variant-numeric: tabular-nums;
+}
+
+.hero-load-percent-suffix {
+  font-size: clamp(3.5rem, 12vw, 9rem);
+  margin-left: 0.06em;
+  color: var(--olive);
+  opacity: 0.75;
 }
 
 /* Vignette — legibility over video without boxing content */

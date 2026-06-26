@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Barlow_Condensed, DM_Sans, Space_Mono } from "next/font/google";
 import Nav from "@/components/Nav";
+import { HERO_MANIFEST, heroFrameSrcForManifest } from "@/lib/hero-manifest";
 import "./globals.css";
 
 const barlowCondensed = Barlow_Condensed({
@@ -41,7 +42,7 @@ export default function RootLayout({
         <link
           rel="preload"
           as="image"
-          href="/cdn-frames/frame_0001.jpg?v=cdn-frames-v2"
+          href={heroFrameSrcForManifest(0, HERO_MANIFEST)}
         />
         <script
           dangerouslySetInnerHTML={{

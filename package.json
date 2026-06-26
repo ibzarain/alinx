@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "extract-hero-frames": "node scripts/extract-hero-frames.mjs",
+    "compress-hero-frames": "node scripts/compress-hero-frames.mjs",
     "replace-hero-video": "node scripts/replace-hero-video.mjs"
   },
   "dependencies": {

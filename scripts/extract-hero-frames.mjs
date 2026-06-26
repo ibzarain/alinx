@@ -1,12 +1,16 @@
 #!/usr/bin/env node
 /**
- * Extract JPG frames from a source video for the scroll-scrub hero.
+ * Extract frames from a source video for the scroll-scrub hero.
  * Writes frames to .hero-frames/ (gitignored), updates lib/hero-frames.manifest.json,
- * then upload .hero-frames/*.jpg to DigitalOcean Spaces at frames/.
+ * then upload .hero-frames/* to DigitalOcean Spaces at frames/.
  *
- * Requires: ffmpeg
+ * Requires: ffmpeg (libwebp recommended)
  *
- * Env: HERO_FRAME_COUNT, HERO_START_FRAME, HERO_END_FRAME, HERO_FRAME_WIDTH, HERO_JPEG_QUALITY
+ * Env:
+ *   HERO_FRAME_COUNT, HERO_START_FRAME, HERO_END_FRAME, HERO_FRAME_WIDTH
+ *   HERO_FRAME_FORMAT=webp|jpg  (default webp — ~40% smaller at same visual quality)
+ *   HERO_WEBP_QUALITY=85          (75–90; 85 is visually lossless for scroll scrub)
+ *   HERO_JPEG_QUALITY=5           (ffmpeg q:v 2–10; only used when format=jpg)
  */
 import { execSync } from "child_process";
 import fs from "fs";
@@ -20,7 +24,7 @@ const videoPath = process.argv[2]
   : path.join(root, ".hero-source/building.mp4");
 const outDir = path.join(root, ".hero-frames");
 const manifestPath = path.join(root, "lib/hero-frames.manifest.json");
-const CDN_BASE = "https://alinx.nyc3.cdn.digitaloceanspaces.com";
+const publicManifestPath = path.join(root, "public/hero/frames/manifest.json");
 
 const frameCount = Math.max(2, Number(process.env.HERO_FRAME_COUNT) || 240);
 const startFrame = Math.max(1, Number(process.env.HERO_START_FRAME) || 1);
@@ -29,15 +33,36 @@ const endFrame = Math.min(
   Math.max(startFrame, Number(process.env.HERO_END_FRAME) || frameCount)
 );
 
+const format = (process.env.HERO_FRAME_FORMAT || "webp").toLowerCase();
+const useWebp = format === "webp";
+const ext = useWebp ? "webp" : "jpg";
+
+const webpQuality = Math.min(
+  100,
+  Math.max(75, Number(process.env.HERO_WEBP_QUALITY) || 85)
+);
 const jpegQuality = Math.min(
-  31,
-  Math.max(2, Number(process.env.HERO_JPEG_QUALITY) || 3)
+  10,
+  Math.max(2, Number(process.env.HERO_JPEG_QUALITY) || 5)
 );
 
 if (!fs.existsSync(videoPath)) {
   console.error("Missing source video:", videoPath);
-  console.error("Pass a path: npm run extract-hero-frames -- \"/path/to/video.mp4\"");
+  console.error('Pass a path: npm run extract-hero-frames -- "/path/to/video.mp4"');
   process.exit(1);
+}
+
+if (useWebp) {
+  try {
+    const encoders = execSync("ffmpeg -hide_banner -encoders 2>&1", {
+      encoding: "utf8",
+    });
+    if (!encoders.includes("libwebp")) {
+      console.warn("libwebp not found — falling back to JPEG (q:v 5)");
+    }
+  } catch {
+    /* checked below */
+  }
 }
 
 let sourceWidth = 1920;
@@ -84,7 +109,7 @@ const vf =
 fs.mkdirSync(outDir, { recursive: true });
 
 for (const f of fs.readdirSync(outDir)) {
-  if (/^frame_\d+\.jpg$/.test(f)) fs.unlinkSync(path.join(outDir, f));
+  if (/^frame_\d+\.(jpg|webp)$/i.test(f)) fs.unlinkSync(path.join(outDir, f));
 }
 
 const trimArg =
@@ -92,14 +117,39 @@ const trimArg =
     ? `-ss ${((startFrame - 1) / frameFps).toFixed(4)}`
     : "";
 
+let encodeArgs;
+let actualExt = ext;
+let actualFormat = format;
+
+if (useWebp) {
+  try {
+    const encoders = execSync("ffmpeg -hide_banner -encoders 2>&1", {
+      encoding: "utf8",
+    });
+    if (encoders.includes("libwebp")) {
+      encodeArgs = `-c:v libwebp -quality ${webpQuality} -compression_level 4`;
+    } else {
+      actualExt = "jpg";
+      actualFormat = "jpg";
+      encodeArgs = `-q:v ${jpegQuality}`;
+    }
+  } catch {
+    actualExt = "jpg";
+    actualFormat = "jpg";
+    encodeArgs = `-q:v ${jpegQuality}`;
+  }
+} else {
+  encodeArgs = `-q:v ${jpegQuality}`;
+}
+
 execSync(
-  `ffmpeg -y -i "${videoPath}" ${trimArg} -vf "${vf}" -q:v ${jpegQuality} "${path.join(outDir, "frame_%04d.jpg")}"`,
+  `ffmpeg -y -i "${videoPath}" ${trimArg} -vf "${vf}" ${encodeArgs} "${path.join(outDir, `frame_%04d.${actualExt}`)}"`,
   { stdio: "inherit", cwd: root }
 );
 
 const frames = fs
   .readdirSync(outDir)
-  .filter((f) => /^frame_\d+\.jpg$/.test(f))
+  .filter((f) => new RegExp(`^frame_\\d+\\.${actualExt}$`, "i").test(f))
   .sort();
 
 if (frames.length === 0) {
@@ -107,14 +157,26 @@ if (frames.length === 0) {
   process.exit(1);
 }
 
+const totalBytes = frames.reduce(
+  (sum, f) => sum + fs.statSync(path.join(outDir, f)).size,
+  0
+);
+const avgKb = (totalBytes / frames.length / 1024).toFixed(0);
+
 const videoStat = fs.statSync(videoPath);
+const cacheSuffix =
+  actualFormat === "webp"
+    ? `webp-q${webpQuality}`
+    : `jpg-q${jpegQuality}`;
+
 const manifest = {
   frameCount: frames.length,
   fps: Number(frameFps.toFixed(3)),
-  pattern: "/cdn-frames/frame_%04d.jpg",
+  format: actualFormat,
+  pattern: `https://alinx.nyc3.cdn.digitaloceanspaces.com/frames/frame_%04d.${actualExt}`,
   width: targetWidth,
   height: targetHeight,
-  cacheKey: `${videoStat.mtimeMs}-${videoStat.size}-${frames.length}-full`,
+  cacheKey: `${videoStat.mtimeMs}-${videoStat.size}-${frames.length}-${cacheSuffix}`,
 };
 
 if (startFrame > 1) manifest.startFrame = startFrame;
@@ -123,9 +185,14 @@ if (endFrame < frames.length) {
   manifest.endTimeSec = endTime;
 }
 
-fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + "\n");
+const manifestJson = JSON.stringify(manifest, null, 2) + "\n";
+fs.writeFileSync(manifestPath, manifestJson);
+if (fs.existsSync(path.dirname(publicManifestPath))) {
+  fs.writeFileSync(publicManifestPath, manifestJson);
+}
 
-console.log(`Done: ${frames.length} frames → ${outDir}`);
+console.log(`Done: ${frames.length} ${actualExt.toUpperCase()} frames → ${outDir}`);
+console.log(`Avg frame size: ${avgKb} KB (${(totalBytes / 1024 / 1024).toFixed(1)} MB total)`);
 console.log("Updated:", manifestPath);
 console.log("\nUpload to DigitalOcean Spaces:");
-console.log(`  ${outDir}/frame_*.jpg  →  frames/`);
+console.log(`  ${outDir}/frame_*.${actualExt}  →  frames/`);

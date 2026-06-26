@@ -15,6 +15,7 @@ import {
 import HeroMorphNarrative from "@/components/HeroMorphNarrative";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 function clamp(n: number, min: number, max: number) {
   return Math.min(max, Math.max(min, n));
@@ -49,8 +50,13 @@ export default function ScrollScrubHero() {
 
   const [ready, setReady] = useState(false);
   const [firstFrameReady, setFirstFrameReady] = useState(false);
+  const [loadPercent, setLoadPercent] = useState(0);
+  const [loadReveal, setLoadReveal] = useState<"loading" | "revealing" | "done">("loading");
+  const [portalReady, setPortalReady] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [progress, setProgress] = useState(0);
+
+  const heroRevealed = loadReveal === "done";
 
   const drawFrameBlend = useCallback(
     (fromIndex: number, toIndex: number, blend: number) => {
@@ -128,6 +134,28 @@ export default function ScrollScrubHero() {
   }, [drawFrame, drawFrameBlend, firstFrameReady, ready, reducedMotion]);
 
   useEffect(() => {
+    setPortalReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (heroRevealed) return;
+
+    const scrollbarW = window.innerWidth - document.documentElement.clientWidth;
+    document.documentElement.classList.add("hero-scroll-lock");
+    if (scrollbarW > 0) {
+      document.documentElement.style.setProperty(
+        "--hero-lock-scrollbar",
+        `${scrollbarW}px`
+      );
+    }
+
+    return () => {
+      document.documentElement.classList.remove("hero-scroll-lock");
+      document.documentElement.style.removeProperty("--hero-lock-scrollbar");
+    };
+  }, [heroRevealed]);
+
+  useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
     const apply = () => setReducedMotion(mq.matches);
     apply();
@@ -140,6 +168,8 @@ export default function ScrollScrubHero() {
 
     setReady(false);
     setFirstFrameReady(false);
+    setLoadPercent(0);
+    setLoadReveal("loading");
     imagesRef.current = [];
     lastDrawKeyRef.current = "";
 
@@ -154,6 +184,14 @@ export default function ScrollScrubHero() {
       const startIdx = (manifest.startFrame ?? 1) - 1;
       const endIdx = Math.min(manifest.endFrame ?? frameCount, frameCount) - 1;
       const images: HTMLImageElement[] = new Array(frameCount);
+      let loadedCount = 0;
+
+      const reportProgress = () => {
+        loadedCount += 1;
+        if (!cancelled) {
+          setLoadPercent(Math.round((loadedCount / frameCount) * 100));
+        }
+      };
 
       const first = await loadHeroFrameImage(startIdx, manifest);
       if (cancelled || !first) {
@@ -168,6 +206,7 @@ export default function ScrollScrubHero() {
       imagesRef.current = images;
       lastDrawKeyRef.current = "";
       drawFrame(startIdx);
+      reportProgress();
       setFirstFrameReady(true);
 
       const rest = Array.from({ length: frameCount }, (_, i) => i).filter(
@@ -178,6 +217,7 @@ export default function ScrollScrubHero() {
         rest.map(async (i) => {
           const img = await loadHeroFrameImage(i, manifest);
           if (!cancelled && img) images[i] = img;
+          reportProgress();
         })
       );
 
@@ -204,10 +244,22 @@ export default function ScrollScrubHero() {
 
       if (!hasFrames) {
         console.error("Hero frames failed to load from CDN.", HERO_MANIFEST);
+        setLoadReveal("done");
         return;
       }
 
       setReady(true);
+      setLoadPercent(100);
+
+      const prefersReduced =
+        typeof window !== "undefined" &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      if (prefersReduced) {
+        setLoadReveal("done");
+      } else {
+        requestAnimationFrame(() => setLoadReveal("revealing"));
+      }
     }
 
     init();
@@ -249,12 +301,39 @@ export default function ScrollScrubHero() {
     };
   }, [firstFrameReady, ready, updateFromScroll]);
 
+  const handleLoadingRevealEnd = (e: React.TransitionEvent<HTMLDivElement>) => {
+    if (e.propertyName !== "transform" || loadReveal !== "revealing") return;
+    setLoadReveal("done");
+  };
+
   const beatProgress = heroBeatScrollProgress(progress);
   const headline = headlineScrollStyle(progress);
   const narrative = narrativeScrollStyle(progress);
 
+  const contentLive = firstFrameReady;
+
+  const loadingOverlay =
+    portalReady && loadReveal !== "done"
+      ? createPortal(
+          <div
+            className={`scroll-hero-loading${loadReveal === "revealing" ? " scroll-hero-loading--reveal" : ""}`}
+            onTransitionEnd={handleLoadingRevealEnd}
+            aria-hidden={loadReveal === "revealing"}
+            aria-busy={loadReveal === "loading"}
+          >
+            <div className="hero-load-percent" aria-live="polite">
+              <span className="hero-load-percent-num">{loadPercent}</span>
+              <span className="hero-load-percent-suffix">%</span>
+            </div>
+          </div>,
+          document.body
+        )
+      : null;
+
   return (
-    <section
+    <>
+      {loadingOverlay}
+      <section
       id="hero"
       ref={containerRef}
       className={`scroll-hero${reducedMotion ? " scroll-hero-reduced" : ""}`}
@@ -265,7 +344,6 @@ export default function ScrollScrubHero() {
           className="scroll-hero-canvas"
           aria-hidden
         />
-        {!firstFrameReady && <div className="scroll-hero-loading" aria-hidden />}
 
         <div className="scroll-hero-vignette" aria-hidden />
 
@@ -273,8 +351,8 @@ export default function ScrollScrubHero() {
           className="hero-content"
           style={{
             transform: `translateY(${headline.translateY})`,
-            opacity: headline.opacity,
-            pointerEvents: headline.opacity < 0.1 ? "none" : "auto",
+            opacity: contentLive ? headline.opacity : 0,
+            pointerEvents: contentLive && headline.opacity >= 0.1 ? "auto" : "none",
           }}
         >
           <span className="hero-kicker" aria-hidden />
@@ -299,8 +377,10 @@ export default function ScrollScrubHero() {
           beatProgress={beatProgress}
           heroProgress={progress}
           reducedMotion={reducedMotion}
+          revealed={contentLive}
         />
       </div>
     </section>
+    </>
   );
 }

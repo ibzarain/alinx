@@ -6,6 +6,7 @@ export type HeroFrameManifest = {
   endFrame?: number;
   endTimeSec?: number;
   fps: number;
+  format?: "webp" | "jpg";
   pattern: string;
   width: number;
   height: number;

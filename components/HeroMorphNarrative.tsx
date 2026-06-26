@@ -7,12 +7,14 @@ type HeroMorphNarrativeProps = {
   beatProgress: number;
   heroProgress: number;
   reducedMotion?: boolean;
+  revealed?: boolean;
 };
 
 export default function HeroMorphNarrative({
   beatProgress,
   heroProgress,
   reducedMotion = false,
+  revealed = true,
 }: HeroMorphNarrativeProps) {
   const activeIndex = heroActiveBeatIndex(beatProgress);
   const activeWord = HERO_BEATS[activeIndex]?.word ?? "";
@@ -22,8 +24,8 @@ export default function HeroMorphNarrative({
     <div
       className="hero-narrative"
       style={{
-        opacity: narrative.visible ? narrative.opacity : 0,
-        visibility: narrative.visible ? "visible" : "hidden",
+        opacity: revealed && narrative.visible ? narrative.opacity : 0,
+        visibility: revealed && narrative.visible ? "visible" : "hidden",
       }}
       aria-live="polite"
       aria-atomic="true"
