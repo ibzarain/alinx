@@ -39,3 +39,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# heavy media — served from DigitalOcean Spaces (keep manifest.json)
+public/hero/frames/*.jpg
+public/**/*.mp4
+public/**/*.MP4
+.hero-frames/
+.hero-source/

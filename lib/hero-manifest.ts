@@ -1,4 +1,4 @@
-import manifest from "../public/hero/frames/manifest.json";
+import manifest from "./hero-frames.manifest.json";
 
 export type HeroFrameManifest = {
   frameCount: number;
@@ -9,7 +9,6 @@ export type HeroFrameManifest = {
   pattern: string;
   width: number;
   height: number;
-  videoSrc?: string;
   cacheKey: string;
 };
 
@@ -18,7 +17,6 @@ export const HERO_FRAME_COUNT = HERO_MANIFEST.frameCount;
 export const HERO_START_FRAME = HERO_MANIFEST.startFrame ?? 1;
 export const HERO_END_FRAME = HERO_MANIFEST.endFrame ?? HERO_FRAME_COUNT;
 export const HERO_END_TIME_SEC = HERO_MANIFEST.endTimeSec;
-export const HERO_VIDEO_SRC = HERO_MANIFEST.videoSrc ?? "/building.mp4";
 export const HERO_FRAME_PATTERN = HERO_MANIFEST.pattern;
 export const HERO_FRAME_CACHE_KEY = HERO_MANIFEST.cacheKey;
 
@@ -62,21 +60,4 @@ export function mapScrollToFrameBlend(
   const fromIndex = Math.floor(scaled);
   const toIndex = Math.min(end, fromIndex + 1);
   return { fromIndex, toIndex, blend: scaled - fromIndex };
-}
-
-export function mapScrollToVideoTime(
-  progress: number,
-  duration: number,
-  m: HeroFrameManifest = HERO_MANIFEST
-): number {
-  const p = Math.min(1, Math.max(0, progress));
-  const count = Math.max(1, m.frameCount);
-  const startRatio = scrubStartIndex(m) / Math.max(1, count - 1);
-  const endRatio = scrubEndIndex(m) / Math.max(1, count - 1);
-  const start = startRatio * duration;
-  const end =
-    m.endTimeSec && m.endFrame && m.endFrame < count
-      ? m.endTimeSec
-      : endRatio * duration;
-  return start + p * (end - start);
 }

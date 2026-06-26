@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 /**
- * Extract JPG frames from public/building.mp4 for scroll-scrub hero.
- * Re-run when building.mp4 changes, then commit public/hero/frames/.
+ * Extract JPG frames from a source video for the scroll-scrub hero.
+ * Writes frames to .hero-frames/ (gitignored), updates lib/hero-frames.manifest.json,
+ * then upload .hero-frames/*.jpg to DigitalOcean Spaces at frames/.
+ *
  * Requires: ffmpeg
  *
- * Env: HERO_FRAME_COUNT (default 240), HERO_START_FRAME (default 1),
- *   HERO_END_FRAME, HERO_FRAME_WIDTH, HERO_JPEG_QUALITY
+ * Env: HERO_FRAME_COUNT, HERO_START_FRAME, HERO_END_FRAME, HERO_FRAME_WIDTH, HERO_JPEG_QUALITY
  */
 import { execSync } from "child_process";
 import fs from "fs";
@@ -14,8 +15,12 @@ import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(__dirname, "..");
-const videoPath = path.join(root, "public/building.mp4");
-const outDir = path.join(root, "public/hero/frames");
+const videoPath = process.argv[2]
+  ? path.resolve(process.argv[2])
+  : path.join(root, ".hero-source/building.mp4");
+const outDir = path.join(root, ".hero-frames");
+const manifestPath = path.join(root, "lib/hero-frames.manifest.json");
+const CDN_BASE = "https://alinx.nyc3.cdn.digitaloceanspaces.com";
 
 const frameCount = Math.max(2, Number(process.env.HERO_FRAME_COUNT) || 240);
 const startFrame = Math.max(1, Number(process.env.HERO_START_FRAME) || 1);
@@ -30,7 +35,8 @@ const jpegQuality = Math.min(
 );
 
 if (!fs.existsSync(videoPath)) {
-  console.error("Missing:", videoPath);
+  console.error("Missing source video:", videoPath);
+  console.error("Pass a path: npm run extract-hero-frames -- \"/path/to/video.mp4\"");
   process.exit(1);
 }
 
@@ -78,20 +84,14 @@ const vf =
 fs.mkdirSync(outDir, { recursive: true });
 
 for (const f of fs.readdirSync(outDir)) {
-  if (f.startsWith("frame_") && f.endsWith(".jpg")) {
-    fs.unlinkSync(path.join(outDir, f));
-  }
+  if (/^frame_\d+\.jpg$/.test(f)) fs.unlinkSync(path.join(outDir, f));
 }
 
-const trimArg = endFrame < frameCount ? `-t ${endTime}` : "";
-const clipNote =
-  endFrame < frameCount
-    ? `clipped at frame ${endFrame}/${frameCount} (≈${endTime.toFixed(2)}s)`
-    : `full ${videoDuration.toFixed(2)}s`;
+const trimArg =
+  startFrame > 1
+    ? `-ss ${((startFrame - 1) / frameFps).toFixed(4)}`
+    : "";
 
-console.log(
-  `Extracting ${extractCount} frames (${clipNote} @ ${frameFps.toFixed(2)}fps, ${targetWidth}x${targetHeight}, JPEG q:v ${jpegQuality})...`
-);
 execSync(
   `ffmpeg -y -i "${videoPath}" ${trimArg} -vf "${vf}" -q:v ${jpegQuality} "${path.join(outDir, "frame_%04d.jpg")}"`,
   { stdio: "inherit", cwd: root }
@@ -111,10 +111,9 @@ const videoStat = fs.statSync(videoPath);
 const manifest = {
   frameCount: frames.length,
   fps: Number(frameFps.toFixed(3)),
-  pattern: "/hero/frames/frame_%04d.jpg",
+  pattern: "/cdn-frames/frame_%04d.jpg",
   width: targetWidth,
   height: targetHeight,
-  videoSrc: "/building.mp4",
   cacheKey: `${videoStat.mtimeMs}-${videoStat.size}-${frames.length}-full`,
 };
 
@@ -124,10 +123,9 @@ if (endFrame < frames.length) {
   manifest.endTimeSec = endTime;
 }
 
-fs.writeFileSync(
-  path.join(outDir, "manifest.json"),
-  JSON.stringify(manifest, null, 2)
-);
+fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + "\n");
 
 console.log(`Done: ${frames.length} frames → ${outDir}`);
-console.log("manifest.json:", manifest);
+console.log("Updated:", manifestPath);
+console.log("\nUpload to DigitalOcean Spaces:");
+console.log(`  ${outDir}/frame_*.jpg  →  frames/`);

@@ -3,10 +3,8 @@
 import { drawCover } from "@/lib/scroll-composite";
 import {
   HERO_MANIFEST,
-  HERO_VIDEO_SRC,
   heroFrameSrcForManifest,
   mapScrollToFrameBlend,
-  mapScrollToVideoTime,
   type HeroFrameManifest,
 } from "@/lib/hero-manifest";
 import {
@@ -26,75 +24,33 @@ function getDpr(): number {
   return Math.min(window.devicePixelRatio || 1, 2.5);
 }
 
-type ScrubMode = "frames" | "video";
+function loadHeroFrameImage(
+  index: number,
+  manifest: HeroFrameManifest
+): Promise<HTMLImageElement | null> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.decoding = "async";
+    img.onload = () => {
+      resolve(img.naturalWidth > 0 ? img : null);
+    };
+    img.onerror = () => resolve(null);
+    img.src = heroFrameSrcForManifest(index, manifest);
+  });
+}
 
 export default function ScrollScrubHero() {
   const containerRef = useRef<HTMLElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
   const imagesRef = useRef<HTMLImageElement[]>([]);
   const manifestRef = useRef<HeroFrameManifest>(HERO_MANIFEST);
-  const frameCountRef = useRef(HERO_MANIFEST.frameCount);
-  const modeRef = useRef<ScrubMode>("frames");
   const lastDrawKeyRef = useRef("");
   const rafRef = useRef<number | null>(null);
 
   const [ready, setReady] = useState(false);
-  const [useFrames, setUseFrames] = useState(true);
+  const [firstFrameReady, setFirstFrameReady] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [progress, setProgress] = useState(0);
-
-  const drawImage = useCallback((source: CanvasImageSource, key: string) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    const dpr = getDpr();
-    const w = canvas.clientWidth;
-    const h = canvas.clientHeight;
-    if (w === 0 || h === 0) return;
-
-    if (key === lastDrawKeyRef.current) return;
-    lastDrawKeyRef.current = key;
-
-    if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) {
-      canvas.width = Math.round(w * dpr);
-      canvas.height = Math.round(h * dpr);
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    }
-
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = "high";
-
-    if (source instanceof HTMLImageElement) {
-      drawCover(ctx, source, w, h);
-      return;
-    }
-
-    const video = source as HTMLVideoElement;
-    const ir = video.videoWidth / video.videoHeight;
-    const cr = w / h;
-    let sw: number;
-    let sh: number;
-    let sx: number;
-    let sy: number;
-
-    if (ir > cr) {
-      sh = video.videoHeight;
-      sw = sh * cr;
-      sx = (video.videoWidth - sw) / 2;
-      sy = 0;
-    } else {
-      sw = video.videoWidth;
-      sh = sw / cr;
-      sx = 0;
-      sy = (video.videoHeight - sh) / 2;
-    }
-
-    ctx.drawImage(video, sx, sy, sw, sh, 0, 0, w, h);
-  }, []);
 
   const drawFrameBlend = useCallback(
     (fromIndex: number, toIndex: number, blend: number) => {
@@ -143,29 +99,9 @@ export default function ScrollScrubHero() {
     [drawFrameBlend]
   );
 
-  const seekVideo = useCallback(
-    (scrubP: number) => {
-      const video = videoRef.current;
-      if (!video || !video.duration) return;
-
-      const target = mapScrollToVideoTime(
-        scrubP,
-        video.duration,
-        manifestRef.current
-      );
-      if (Math.abs(video.currentTime - target) > 0.02) {
-        video.currentTime = target;
-      }
-      if (video.readyState >= 2) {
-        drawImage(video, `video:${target.toFixed(3)}`);
-      }
-    },
-    [drawImage]
-  );
-
   const updateFromScroll = useCallback(() => {
     const container = containerRef.current;
-    if (!container || !ready) return;
+    if (!container || (!ready && !firstFrameReady)) return;
 
     const rect = container.getBoundingClientRect();
     const scrollable = container.offsetHeight - window.innerHeight;
@@ -173,27 +109,23 @@ export default function ScrollScrubHero() {
 
     setProgress(p);
 
-    if (reducedMotion) {
-      if (modeRef.current === "frames") {
-        drawFrame((manifestRef.current.startFrame ?? 1) - 1);
-      } else seekVideo(0);
+    const startIdx = (manifestRef.current.startFrame ?? 1) - 1;
+
+    if (!ready || reducedMotion) {
+      drawFrame(startIdx);
       return;
     }
 
-    if (modeRef.current === "frames") {
-      const { fromIndex, toIndex, blend } = mapScrollToFrameBlend(
-        p,
-        manifestRef.current
-      );
-      drawFrameBlend(fromIndex, toIndex, blend);
-    } else {
-      seekVideo(p);
-    }
+    const { fromIndex, toIndex, blend } = mapScrollToFrameBlend(
+      p,
+      manifestRef.current
+    );
+    drawFrameBlend(fromIndex, toIndex, blend);
 
     window.dispatchEvent(
       new CustomEvent("hero-scrub-progress", { detail: { progress: p } })
     );
-  }, [drawFrame, ready, reducedMotion, seekVideo]);
+  }, [drawFrame, drawFrameBlend, firstFrameReady, ready, reducedMotion]);
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -207,96 +139,75 @@ export default function ScrollScrubHero() {
     let cancelled = false;
 
     setReady(false);
+    setFirstFrameReady(false);
     imagesRef.current = [];
-    modeRef.current = "frames";
     lastDrawKeyRef.current = "";
 
     async function loadFrameImages(): Promise<boolean> {
-      let manifest: HeroFrameManifest = HERO_MANIFEST;
-      try {
-        const res = await fetch("/hero/frames/manifest.json");
-        if (res.ok) {
-          manifest = (await res.json()) as HeroFrameManifest;
-        }
-      } catch {
-        /* use bundled manifest */
-      }
+      const manifest: HeroFrameManifest = HERO_MANIFEST;
 
       if (cancelled || !manifest.frameCount) return false;
 
       manifestRef.current = manifest;
-      frameCountRef.current = manifest.frameCount;
 
       const frameCount = manifest.frameCount;
+      const startIdx = (manifest.startFrame ?? 1) - 1;
+      const endIdx = Math.min(manifest.endFrame ?? frameCount, frameCount) - 1;
       const images: HTMLImageElement[] = new Array(frameCount);
-      let loaded = 0;
 
-      await new Promise<void>((resolve) => {
-        const onDone = () => {
-          loaded += 1;
-          if (loaded >= frameCount) resolve();
-        };
+      const first = await loadHeroFrameImage(startIdx, manifest);
+      if (cancelled || !first) {
+        console.error(
+          "Hero: failed to load first frame.",
+          heroFrameSrcForManifest(startIdx, manifest)
+        );
+        return false;
+      }
 
-        for (let i = 0; i < frameCount; i++) {
-          const img = new Image();
-          img.decoding = "async";
-          img.src = heroFrameSrcForManifest(i, manifest);
-          img.onload = onDone;
-          img.onerror = onDone;
-          images[i] = img;
-        }
-      });
+      images[startIdx] = first;
+      imagesRef.current = images;
+      lastDrawKeyRef.current = "";
+      drawFrame(startIdx);
+      setFirstFrameReady(true);
+
+      const rest = Array.from({ length: frameCount }, (_, i) => i).filter(
+        (i) => i !== startIdx
+      );
+
+      await Promise.all(
+        rest.map(async (i) => {
+          const img = await loadHeroFrameImage(i, manifest);
+          if (!cancelled && img) images[i] = img;
+        })
+      );
 
       if (cancelled) return false;
 
-      const startIdx = (manifest.startFrame ?? 1) - 1;
-      const endIdx = Math.min(manifest.endFrame ?? frameCount, frameCount) - 1;
-      const firstOk = images[startIdx]?.complete && images[startIdx].naturalWidth > 0;
+      const loaded = images.filter((img) => img?.complete && img.naturalWidth > 0).length;
       const lastOk = images[endIdx]?.complete && images[endIdx].naturalWidth > 0;
-      if (!firstOk || !lastOk) return false;
+
+      if (!lastOk) {
+        console.warn(
+          `Hero: frame ${endIdx + 1} missing (${loaded}/${frameCount} loaded).`
+        );
+      }
+
+      if (loaded < 2) return false;
 
       imagesRef.current = images;
-      return true;
-    }
-
-    function loadVideo(): Promise<void> {
-      return new Promise((resolve) => {
-        const video = videoRef.current;
-        if (!video) {
-          resolve();
-          return;
-        }
-
-        const onReady = () => {
-          video.removeEventListener("loadeddata", onReady);
-          video.removeEventListener("error", onReady);
-          resolve();
-        };
-
-        video.addEventListener("loadeddata", onReady);
-        video.addEventListener("error", onReady);
-        video.load();
-      });
+      return lastOk || loaded >= frameCount - 1;
     }
 
     async function init() {
       const hasFrames = await loadFrameImages();
       if (cancelled) return;
 
-      if (hasFrames) {
-        modeRef.current = "frames";
-        setUseFrames(true);
-      } else {
-        console.warn(
-          "Hero frames missing or failed to load — falling back to video scrub.",
-          HERO_MANIFEST
-        );
-        modeRef.current = "video";
-        setUseFrames(false);
-        await loadVideo();
+      if (!hasFrames) {
+        console.error("Hero frames failed to load from CDN.", HERO_MANIFEST);
+        return;
       }
 
-      if (!cancelled) setReady(true);
+      setReady(true);
     }
 
     init();
@@ -308,10 +219,10 @@ export default function ScrollScrubHero() {
         img.onerror = null;
       });
     };
-  }, []);
+  }, [drawFrame]);
 
   useEffect(() => {
-    if (!ready) return;
+    if (!firstFrameReady) return;
 
     updateFromScroll();
 
@@ -336,7 +247,7 @@ export default function ScrollScrubHero() {
       window.removeEventListener("resize", onResize);
       if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
     };
-  }, [ready, updateFromScroll]);
+  }, [firstFrameReady, ready, updateFromScroll]);
 
   const beatProgress = heroBeatScrollProgress(progress);
   const headline = headlineScrollStyle(progress);
@@ -349,21 +260,12 @@ export default function ScrollScrubHero() {
       className={`scroll-hero${reducedMotion ? " scroll-hero-reduced" : ""}`}
     >
       <div className="scroll-hero-sticky">
-        <video
-          ref={videoRef}
-          className="scroll-hero-video"
-          src={HERO_VIDEO_SRC}
-          muted
-          playsInline
-          preload={useFrames ? "none" : "auto"}
-          aria-hidden
-        />
         <canvas
           ref={canvasRef}
           className="scroll-hero-canvas"
           aria-hidden
         />
-        {!ready && <div className="scroll-hero-loading" aria-hidden />}
+        {!firstFrameReady && <div className="scroll-hero-loading" aria-hidden />}
 
         <div className="scroll-hero-vignette" aria-hidden />
 

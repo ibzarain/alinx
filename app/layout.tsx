@@ -38,6 +38,11 @@ export default function RootLayout({
       className={`${barlowCondensed.variable} ${dmSans.variable} ${spaceMono.variable} h-full antialiased`}
     >
       <head>
+        <link
+          rel="preload"
+          as="image"
+          href="/cdn-frames/frame_0001.jpg?v=cdn-frames-v2"
+        />
         <script
           dangerouslySetInnerHTML={{
             __html: `(function(){try{if((window.scrollY||0)<16)document.documentElement.classList.add("nav-over-dark-initial")}catch(e){}})();`,

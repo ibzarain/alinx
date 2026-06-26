@@ -10,6 +10,15 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async rewrites() {
+    return [
+      {
+        source: "/cdn-frames/:path*",
+        destination:
+          "https://alinx.nyc3.cdn.digitaloceanspaces.com/frames/:path*",
+      },
+    ];
+  },
 };
 
 export default nextConfig;

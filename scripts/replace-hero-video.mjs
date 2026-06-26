@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /**
- * Re-extract scroll-scrub frames from public/building.mp4.
+ * Replace hero source video, re-extract frames, update lib/hero-frames.manifest.json.
+ * Upload outputs to DigitalOcean Spaces (see extract-hero-frames.mjs).
  *
  * Usage:
- *   npm run replace-hero-video
  *   npm run replace-hero-video -- "/path/to/video.mp4"
  */
 import { execSync } from "child_process";
@@ -13,34 +13,22 @@ import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(__dirname, "..");
-const dest = path.join(root, "public/building.mp4");
-
-const defaultSources = [
-  path.join(root, "public/building.mp4"),
-  "/mnt/c/Users/IbrahimArain/Downloads/Generated Video May 29, 2026 - 12_35PM.mp4",
-];
+const cacheDir = path.join(root, ".hero-source");
+const dest = path.join(cacheDir, "building.mp4");
 
 const argSource = process.argv[2];
-let source = argSource;
-
-if (!source) {
-  source = defaultSources.find((p) => p && fs.existsSync(p));
-}
-
-if (!source || !fs.existsSync(source)) {
-  console.error("Source video not found.");
-  console.error("Pass a path: npm run replace-hero-video -- \"/path/to/video.mp4\"");
-  defaultSources.forEach((p) => console.error("  tried:", p));
+if (!argSource || !fs.existsSync(argSource)) {
+  console.error("Pass a source video path:");
+  console.error('  npm run replace-hero-video -- "/path/to/video.mp4"');
   process.exit(1);
 }
 
-if (source !== dest) {
-  fs.mkdirSync(path.dirname(dest), { recursive: true });
-  fs.copyFileSync(source, dest);
-}
+const source = path.resolve(argSource);
+fs.mkdirSync(cacheDir, { recursive: true });
+fs.copyFileSync(source, dest);
 
 const stat = fs.statSync(dest);
-console.log(`Copied → ${dest} (${(stat.size / 1024 / 1024).toFixed(1)} MB)`);
+console.log(`Cached → ${dest} (${(stat.size / 1024 / 1024).toFixed(1)} MB)`);
 
 try {
   const probe = execSync(
@@ -53,6 +41,6 @@ try {
 }
 
 console.log("\nExtracting frames…");
-execSync("node scripts/extract-hero-frames.mjs", { stdio: "inherit", cwd: root });
+execSync(`node scripts/extract-hero-frames.mjs "${dest}"`, { stdio: "inherit", cwd: root });
 
-console.log("\nDone. Hard-refresh the browser to load new frames.");
+console.log("\nDone. Upload frames to DigitalOcean, then hard-refresh.");

@@ -1,0 +1,8 @@
+{
+  "frameCount": 240,
+  "fps": 24,
+  "pattern": "/cdn-frames/frame_%04d.jpg",
+  "width": 1920,
+  "height": 1080,
+  "cacheKey": "cdn-frames-v2"
+}

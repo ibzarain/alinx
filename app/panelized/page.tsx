@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import Link from "next/link";
+import Nav from "@/components/Nav";
 import SiteFooter from "@/components/SiteFooter";
 
 function useScrollReveal() {
@@ -168,7 +169,7 @@ function Hero() {
           <svg viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7L9 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
           Back
         </Link>
-        <div className="pnl-hero-body">
+        <div className="">
           <span className="pnl-hero-kicker" aria-hidden />
           <h1 className="pnl-hero-title">Panelized<br />Components</h1>
           <p className="pnl-hero-lead">
@@ -672,6 +673,7 @@ export default function PanelizedPage() {
   useScrollReveal();
   return (
     <div className="pnl-page">
+      <Nav />
       <Hero />
       <StructuralInnovation />
       <FeatureSplit

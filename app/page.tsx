@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import Link from "next/link";
+import { CDN_ASSETS } from "@/lib/cdn";
 import ScrollScrubHero from "@/components/ScrollScrubHero";
 import SiteFooter from "@/components/SiteFooter";
 
@@ -151,20 +152,41 @@ function Services() {
 }
 
 function KeyBenefits() {
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.playbackRate = 2;
+    void video.play().catch(() => {});
+  }, []);
+
   return (
-    <section id="key-benefits" className="pnl-block pnl-block--dark">
+    <section id="key-benefits" className="pnl-block pnl-block--cream" data-nav-theme="dark">
+      <video
+        ref={videoRef}
+        className="key-benefits-video"
+        src={CDN_ASSETS.keyBenefitsVideo}
+        muted
+        autoPlay
+        loop
+        playsInline
+        aria-hidden
+      />
+      <div className="key-benefits-video-scrim" aria-hidden />
       <div className="pnl-container">
-        <h2 className="section-h2 pnl-section-h2 pnl-section-h2--light reveal vol-key-benefits-kicker">
-          KEY BENEFITS
-        </h2>
-        <h2 className="section-h2 pnl-section-h2 pnl-section-h2--light reveal d1 vol-key-benefits-head">
+
+        <h2 className="section-h2 pnl-section-h2 reveal d1 vol-key-benefits-head">
           MODULAR CONSTRUCTION SIMPLY MAKES BETTER SENSE
         </h2>
-        <div className="key-benefits-grid">
+        <div className="steel-cards">
           {KEY_BENEFITS.map((b, i) => (
-            <article key={b.title} className={`key-benefit-card reveal${DELAY[i % 2]}`}>
-              <h3 className="key-benefit-title">{b.title}</h3>
-              <SourceList items={b.points} dark />
+            <article key={b.title} className={`steel-card reveal${DELAY[i % 2]}`}>
+              <span className="steel-card-index" aria-hidden>
+                {String(i + 1).padStart(2, "0")}
+              </span>
+              <h3 className="steel-card-title">{b.title}</h3>
+              <SourceList items={b.points} />
             </article>
           ))}
         </div>
@@ -175,31 +197,25 @@ function KeyBenefits() {
 
 function LightGaugeSteel() {
   return (
-    <section className="pnl-block pnl-block--cream" id="light-gauge-steel">
+    <section className="pnl-block pnl-block--dark" id="light-gauge-steel">
       <div className="pnl-container">
-        <h2 className="section-h2 pnl-section-h2 reveal">
+        <h2 className="section-h2 pnl-section-h2 pnl-section-h2--light reveal">
           LIGHT GAUGE STEEL: A FUTURE-PROOF ADVANTAGE
         </h2>
 
-        <div className="steel-cards">
+        <div className="key-benefits-grid">
           {STEEL_PILLARS.map((p, i) => (
-            <article key={p.title} className={`steel-card reveal${DELAY[i % 2]}`}>
-              <span className="steel-card-index" aria-hidden>
-                {String(i + 1).padStart(2, "0")}
-              </span>
-              <h3 className="steel-card-title">{p.title}</h3>
-              <SourceList items={p.points} />
+            <article key={p.title} className={`key-benefit-card reveal${DELAY[i % 2]}`}>
+              <h3 className="key-benefit-title">{p.title}</h3>
+              <SourceList items={p.points} dark />
             </article>
           ))}
 
-          <article className="steel-card steel-card--wide reveal d2">
-            <span className="steel-card-index" aria-hidden>
-              {String(STEEL_PILLARS.length + 1).padStart(2, "0")}
-            </span>
-            <h3 className="steel-card-title">
+          <article className="key-benefit-card key-benefit-card--wide reveal d2">
+            <h3 className="key-benefit-title">
               The Result: a repeatable and adaptable building solution that is:
             </h3>
-            <SourceList items={STEEL_RESULT} />
+            <SourceList items={STEEL_RESULT} dark />
           </article>
         </div>
       </div>

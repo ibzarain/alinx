@@ -83,7 +83,7 @@ export default function Nav() {
             alt="A-LINX Building Technologies"
             width={120}
             height={40}
-            style={{ width: "auto", height: "40px" }}
+            style={{ width: "auto", height: "auto", maxHeight: "40px" }}
             className="nav-logo-img"
             priority
           />

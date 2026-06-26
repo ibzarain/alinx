@@ -193,14 +193,6 @@ nav.site-nav.nav-over-dark .nav-hamburger span { background: #fff; }
   overflow: hidden;
 }
 
-.scroll-hero-video {
-  position: absolute;
-  width: 0;
-  height: 0;
-  opacity: 0;
-  pointer-events: none;
-}
-
 .scroll-hero-canvas {
   position: absolute;
   inset: 0;
@@ -3070,7 +3062,8 @@ footer.site-footer {
   .inner-hero { padding: 8rem 5% 4rem; }
   .pnl-hero { min-height: 78vh; padding: 8rem clamp(1.25rem, 5vw, 4rem) 3.5rem; }
   .pnl-block { padding: 4rem 0; }
-  #key-benefits .key-benefits-grid,
+  #key-benefits .steel-cards,
+  #light-gauge-steel .key-benefits-grid,
   .pnl-adv-grid,
   .pnl-outcome-grid { grid-template-columns: 1fr; }
   .steps-grid { grid-template-columns: 1fr; }
@@ -3120,14 +3113,51 @@ footer.site-footer {
 .vol-usecases { margin-top: 0; }
 .vol-usecases .pnl-source-list { margin-top: 0.5rem; }
 
-/* Key benefits — opaque dark cards (separate from shared pnl-adv-grid) */
-#key-benefits .key-benefits-grid {
+/* Key benefits — video background (cream section) */
+#key-benefits.pnl-block--cream {
+  background: var(--bg3);
+  overflow: hidden;
+}
+#key-benefits .key-benefits-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+  pointer-events: none;
+}
+#key-benefits .key-benefits-video-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    rgba(8, 10, 14, 0.78) 0%,
+    rgba(8, 10, 14, 0.5) 16%,
+    rgba(8, 10, 14, 0.22) 32%,
+    transparent 52%
+  );
+}
+#key-benefits.pnl-block--cream > .pnl-container {
+  position: relative;
+  z-index: 1;
+}
+#key-benefits .vol-key-benefits-head {
+  color: #fff;
+  max-width: 32ch;
+  text-shadow: none;
+}
+
+/* Light gauge steel — dark green cards */
+#light-gauge-steel .key-benefits-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: clamp(1rem, 1.6vw, 1.35rem);
   margin-top: clamp(2rem, 3.5vw, 3rem);
 }
-#key-benefits .key-benefit-card {
+#light-gauge-steel .key-benefit-card {
   position: relative;
   padding: clamp(1.85rem, 2.6vw, 2.35rem) clamp(1.65rem, 2.2vw, 2.1rem);
   background-color: #142210;
@@ -3135,7 +3165,7 @@ footer.site-footer {
   border-radius: 6px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.32);
 }
-#key-benefits .key-benefit-title {
+#light-gauge-steel .key-benefit-title {
   font-family: var(--font-barlow, 'Barlow Condensed', sans-serif);
   font-size: clamp(1.15rem, 2vw, 1.4rem);
   font-weight: 800;
@@ -3145,7 +3175,17 @@ footer.site-footer {
   line-height: 1.12;
   white-space: nowrap;
 }
-#key-benefits .key-benefit-card .pnl-source-list { margin-top: 1rem; }
+#light-gauge-steel .key-benefit-card--wide {
+  grid-column: 1 / -1;
+}
+#light-gauge-steel .key-benefit-card--wide .key-benefit-title {
+  white-space: normal;
+  max-width: 42ch;
+}
+#light-gauge-steel .key-benefit-card .pnl-source-list { margin-top: 1rem; }
+#light-gauge-steel .pnl-source-list--dark li::before {
+  background: rgba(122, 158, 74, 0.55);
+}
 
 /* Light gauge steel — 2-up light outcome cards */
 .pnl-outcome-grid--quad { grid-template-columns: repeat(2, 1fr); }
