@@ -315,72 +315,72 @@ export default function ScrollScrubHero() {
   const loadingOverlay =
     portalReady && loadReveal !== "done"
       ? createPortal(
-          <div
-            className={`scroll-hero-loading${loadReveal === "revealing" ? " scroll-hero-loading--reveal" : ""}`}
-            onTransitionEnd={handleLoadingRevealEnd}
-            aria-hidden={loadReveal === "revealing"}
-            aria-busy={loadReveal === "loading"}
-          >
-            <div className="hero-load-percent" aria-live="polite">
-              <span className="hero-load-percent-num">{loadPercent}</span>
-              <span className="hero-load-percent-suffix">%</span>
-            </div>
-          </div>,
-          document.body
-        )
+        <div
+          className={`scroll-hero-loading${loadReveal === "revealing" ? " scroll-hero-loading--reveal" : ""}`}
+          onTransitionEnd={handleLoadingRevealEnd}
+          aria-hidden={loadReveal === "revealing"}
+          aria-busy={loadReveal === "loading"}
+        >
+          <div className="hero-load-percent" aria-live="polite">
+            <span className="hero-load-percent-num">{loadPercent}</span>
+            <span className="hero-load-percent-suffix">%</span>
+          </div>
+        </div>,
+        document.body
+      )
       : null;
 
   return (
     <>
       {loadingOverlay}
       <section
-      id="hero"
-      ref={containerRef}
-      className={`scroll-hero${reducedMotion ? " scroll-hero-reduced" : ""}`}
-    >
-      <div className="scroll-hero-sticky">
-        <canvas
-          ref={canvasRef}
-          className="scroll-hero-canvas"
-          aria-hidden
-        />
+        id="hero"
+        ref={containerRef}
+        className={`scroll-hero${reducedMotion ? " scroll-hero-reduced" : ""}`}
+      >
+        <div className="scroll-hero-sticky">
+          <canvas
+            ref={canvasRef}
+            className="scroll-hero-canvas"
+            aria-hidden
+          />
 
-        <div className="scroll-hero-vignette" aria-hidden />
+          <div className="scroll-hero-vignette" aria-hidden />
 
-        <div
-          className="hero-content"
-          style={{
-            transform: `translateY(${headline.translateY})`,
-            opacity: contentLive ? headline.opacity : 0,
-            pointerEvents: contentLive && headline.opacity >= 0.1 ? "auto" : "none",
-          }}
-        >
-          <span className="hero-kicker" aria-hidden />
-          <h1 className="hero-h1">
-            <span className="line1">Vertically</span>
-            <span className="line2">Integrated.</span>
-          </h1>
-          <p className="hero-sub">
-            Factory-built modular and panelized systems.
-          </p>
-          <div className="hero-actions">
-            <Link href="/projects" className="btn-hero btn-hero--fill">
-              Our Projects
-            </Link>
-            <Link href="/about" className="btn-hero btn-hero--line">
-              Meet the Team
-            </Link>
+          <div
+            className="hero-content"
+            style={{
+              transform: `translateY(${headline.translateY})`,
+              opacity: contentLive ? headline.opacity : 0,
+              pointerEvents: contentLive && headline.opacity >= 0.1 ? "auto" : "none",
+            }}
+          >
+            <span className="hero-kicker" aria-hidden />
+            <h1 className="hero-h1">
+              <span className="line1">Vertically</span>
+              <span className="line2">Integrated.</span>
+            </h1>
+            <p className="hero-sub">
+              Factory-built modular and panelized systems.
+            </p>
+            <div className="hero-actions">
+              <Link href="/projects" className="btn-hero btn-hero--fill">
+                Our Projects
+              </Link>
+              <Link href="/about" className="btn-hero btn-hero--line">
+                Meet the Team
+              </Link>
+            </div>
           </div>
-        </div>
 
-        <HeroMorphNarrative
-          beatProgress={beatProgress}
-          heroProgress={progress}
-          reducedMotion={reducedMotion}
-          revealed={contentLive}
-        />
-      </div>
-    </section>
+          <HeroMorphNarrative
+            beatProgress={beatProgress}
+            heroProgress={progress}
+            reducedMotion={reducedMotion}
+            revealed={contentLive}
+          />
+        </div>
+      </section>
     </>
   );
 }

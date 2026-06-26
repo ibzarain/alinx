@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import Link from "next/link";
-import Nav from "@/components/Nav";
 import SiteFooter from "@/components/SiteFooter";
 
 function useScrollReveal() {
@@ -673,7 +672,6 @@ export default function PanelizedPage() {
   useScrollReveal();
   return (
     <div className="pnl-page">
-      <Nav />
       <Hero />
       <StructuralInnovation />
       <FeatureSplit
