@@ -1,46 +1,12 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import Link from "next/link";
-import { CDN_ASSETS } from "@/lib/cdn";
+import ScrollExpandKeyBenefits from "@/components/ScrollExpandKeyBenefits";
 import ScrollScrubHero from "@/components/ScrollScrubHero";
 import SiteFooter from "@/components/SiteFooter";
 
 const DELAY = ["", " d1", " d2", " d3"];
-
-const KEY_BENEFITS = [
-  {
-    title: "Built for Canada's housing challenges",
-    points: [
-      "Factory built using modern methods that meet National Building Code",
-      "Rapid deployment in urban, rural, and remote locations",
-      "Deploys from single ADUs up to 20-storey communities",
-    ],
-  },
-  {
-    title: "Replicable at scale",
-    points: [
-      "Standardized systems allow province-to-province rollout without requirement for additional re-engineering",
-      "Efficient transport and on-site assembly",
-      "Streamlined process supports large-scale community builds",
-    ],
-  },
-  {
-    title: "Fully integrated model",
-    points: [
-      "Design, engineering, fabrication, transport, and site build all managed in-house",
-      "Consistent quality control, predictable timelines, reduced risk",
-    ],
-  },
-  {
-    title: "Adaptable to local needs",
-    points: [
-      "Flexible layouts and finishes suited for diverse communities",
-      "Ability to reflect cultural and aesthetic priorities",
-      "Custom design options without slowing production",
-    ],
-  },
-];
 
 const STEEL_PILLARS = [
   {
@@ -151,49 +117,6 @@ function Services() {
   );
 }
 
-function KeyBenefits() {
-  const videoRef = useRef<HTMLVideoElement>(null);
-
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-    video.playbackRate = 2;
-    void video.play().catch(() => {});
-  }, []);
-
-  return (
-    <section id="key-benefits" className="pnl-block pnl-block--cream" data-nav-theme="dark">
-      <video
-        ref={videoRef}
-        className="key-benefits-video"
-        src={CDN_ASSETS.keyBenefitsVideo}
-        muted
-        autoPlay
-        loop
-        playsInline
-        aria-hidden
-      />
-      <div className="key-benefits-video-scrim" aria-hidden />
-      <div className="pnl-container">
-
-        <h2 className="section-h2 pnl-section-h2 reveal d1 vol-key-benefits-head">
-          MODULAR CONSTRUCTION SIMPLY MAKES BETTER SENSE
-        </h2>
-        <div className="steel-cards">
-          {KEY_BENEFITS.map((b, i) => (
-            <article key={b.title} className={`steel-card reveal${DELAY[i % 2]}`}>
-              <span className="steel-card-index" aria-hidden>
-                {String(i + 1).padStart(2, "0")}
-              </span>
-              <h3 className="steel-card-title">{b.title}</h3>
-              <SourceList items={b.points} />
-            </article>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
 
 function LightGaugeSteel() {
   return (
@@ -291,7 +214,7 @@ export default function Home() {
       <ScrollScrubHero />
       <div className="pnl-page">
         <Services />
-        <KeyBenefits />
+        <ScrollExpandKeyBenefits />
         <LightGaugeSteel />
         <Closing />
         <SiteFooter />

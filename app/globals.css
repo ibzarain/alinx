@@ -3062,6 +3062,7 @@ footer.site-footer {
   .inner-hero { padding: 8rem 5% 4rem; }
   .pnl-hero { min-height: 78vh; padding: 8rem clamp(1.25rem, 5vw, 4rem) 3.5rem; }
   .pnl-block { padding: 4rem 0; }
+  #key-benefits .kb-frost-cards,
   #key-benefits .steel-cards,
   #light-gauge-steel .key-benefits-grid,
   .pnl-adv-grid,
@@ -3113,41 +3114,285 @@ footer.site-footer {
 .vol-usecases { margin-top: 0; }
 .vol-usecases .pnl-source-list { margin-top: 0.5rem; }
 
-/* Key benefits — video background (cream section) */
-#key-benefits.pnl-block--cream {
+/* Key benefits — scroll-expand video */
+.kb-scroll {
+  position: relative;
+  height: 250vh;
   background: var(--bg3);
+}
+
+.kb-scroll--reduced {
+  height: auto;
+  min-height: 0;
+}
+
+.kb-scroll-sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  min-height: 620px;
   overflow: hidden;
 }
-#key-benefits .key-benefits-video {
+
+.kb-scroll--reduced .kb-scroll-sticky {
+  position: relative;
+  height: auto;
+  min-height: 0;
+  overflow: visible;
+}
+
+.kb-scroll-cream {
   position: absolute;
   inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  background: var(--bg3);
   z-index: 0;
   pointer-events: none;
 }
-#key-benefits .key-benefits-video-scrim {
+
+.kb-scroll-top-dark {
   position: absolute;
-  inset: 0;
-  z-index: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: clamp(212px, 33vh, 304px);
+  z-index: 2;
   pointer-events: none;
   background: linear-gradient(
     to bottom,
-    rgba(8, 10, 14, 0.78) 0%,
-    rgba(8, 10, 14, 0.5) 16%,
-    rgba(8, 10, 14, 0.22) 32%,
-    transparent 52%
+    rgba(8, 10, 14, 0.96) 0%,
+    rgba(8, 10, 14, 0.9) 58%,
+    rgba(8, 10, 14, 0) 100%
   );
 }
-#key-benefits.pnl-block--cream > .pnl-container {
-  position: relative;
+
+.kb-scroll-head-wrap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 3;
+  display: flex;
+  align-items: flex-end;
+  padding: 0 clamp(2rem, 8vw, 6rem);
+  max-width: calc(var(--container-max, 1200px) + 12rem);
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.kb-scroll-head {
+  color: var(--text);
+  max-width: 32ch;
+  margin: 0;
+}
+
+.kb-scroll-stage {
+  position: absolute;
+  inset: 0;
   z-index: 1;
 }
-#key-benefits .vol-key-benefits-head {
-  color: #fff;
-  max-width: 32ch;
-  text-shadow: none;
+
+.kb-scroll--reduced .kb-scroll-stage {
+  position: relative;
+  inset: auto;
+  padding: clamp(1.5rem, 3vw, 2rem) clamp(1.25rem, 4vw, 2.5rem) clamp(2.5rem, 5vw, 3.5rem);
+}
+
+.kb-scroll-video-shell {
+  position: absolute;
+  overflow: hidden;
+  isolation: isolate;
+  left: clamp(32px, 8vw, 96px);
+  top: clamp(212px, 33vh, 304px);
+  width: calc(100% - clamp(64px, 16vw, 192px));
+  height: calc(100% - clamp(260px, 43vh, 400px));
+  border-radius: clamp(14px, 2.2vw, 22px);
+  box-shadow:
+    0 24px 64px rgba(20, 24, 31, 0.14),
+    0 0 0 1px rgba(20, 24, 31, 0.06);
+  will-change: left, top, width, height, border-radius;
+}
+
+.kb-scroll--reduced .kb-scroll-video-shell {
+  position: relative;
+  left: auto !important;
+  top: auto !important;
+  width: 100% !important;
+  max-width: 1000px;
+  height: auto !important;
+  aspect-ratio: 16 / 9;
+  margin: 0 auto;
+  border-radius: clamp(14px, 2.2vw, 20px) !important;
+}
+
+.kb-scroll-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
+}
+
+.kb-scroll-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    rgba(8, 10, 14, 0.35) 0%,
+    rgba(8, 10, 14, 0.2) 40%,
+    rgba(8, 10, 14, 0.72) 100%
+  );
+  transition: opacity 0.2s ease;
+}
+
+.kb-scroll-cards {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: clamp(212px, 33vh, 304px);
+  bottom: clamp(48px, 10vh, 96px);
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 clamp(1.25rem, 4vw, 2.5rem);
+  pointer-events: none;
+}
+
+.kb-scroll--reduced .kb-scroll-cards {
+  position: relative;
+  inset: auto;
+  opacity: 1 !important;
+  transform: none !important;
+  padding: clamp(2rem, 4vw, 2.75rem) 0 0;
+  pointer-events: auto;
+}
+
+.kb-scroll-cards-inner {
+  width: 100%;
+  max-width: calc(var(--container-max, 1200px) + 5rem);
+  margin: 0 auto;
+}
+
+/* Custom frost cards — glass layer blurs video directly beneath */
+.kb-frost-cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: clamp(1rem, 1.6vw, 1.35rem);
+}
+
+.kb-frost-card {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.kb-frost-card__glass {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  pointer-events: none;
+  transform: translateZ(0);
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .kb-frost-card__glass {
+    background: rgba(10, 13, 18, 0.88) !important;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+.kb-frost-card__body {
+  position: relative;
+  z-index: 1;
+  padding: clamp(1.85rem, 2.6vw, 2.35rem) clamp(1.65rem, 2.2vw, 2.1rem);
+}
+
+.kb-frost-card__index {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  font-family: var(--font-barlow, 'Barlow Condensed', sans-serif);
+  font-size: clamp(6rem, 20vw, 11rem);
+  font-weight: 900;
+  line-height: 0.78;
+  letter-spacing: -0.04em;
+  text-align: right;
+  white-space: nowrap;
+  color: rgba(122, 158, 74, 0.1);
+  pointer-events: none;
+  user-select: none;
+  z-index: 0;
+  transform: translateY(9%);
+}
+
+.kb-frost-card__title {
+  position: relative;
+  z-index: 1;
+  font-family: var(--font-barlow, 'Barlow Condensed', sans-serif);
+  font-size: clamp(1.2rem, 2vw, 1.5rem);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  line-height: 1.12;
+  max-width: 22ch;
+  margin: 0;
+}
+
+.kb-frost-card__list {
+  position: relative;
+  z-index: 1;
+  margin-top: 1.05rem;
+}
+
+.kb-frost-card__list li::before {
+  background: rgba(168, 198, 118, 0.85);
+}
+
+@media (max-width: 900px) {
+  .kb-scroll {
+    height: 230vh;
+  }
+
+  .kb-frost-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kb-scroll {
+    height: auto;
+  }
+
+  .kb-scroll-sticky {
+    position: relative;
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+  }
+
+  .kb-scroll-cream {
+    display: none;
+  }
+
+  .kb-scroll-top-dark {
+    display: none;
+  }
+
+  .kb-scroll-head-wrap {
+    position: relative;
+    top: auto;
+    max-height: none;
+    align-items: stretch;
+    padding: clamp(2rem, 5vh, 2.75rem) clamp(1.25rem, 4vw, 2.5rem) 0;
+  }
+
+  .kb-scroll-video-shell {
+    will-change: auto;
+  }
 }
 
 /* Light gauge steel — dark green cards */
@@ -3223,6 +3468,33 @@ footer.site-footer {
   border-radius: 6px;
   box-shadow: 0 8px 32px rgba(20, 24, 31, 0.06);
 }
+.steel-card.blur {
+  border-radius: 8px;
+}
+
+/* Reusable frosted panel — filter:none overrides Tailwind .blur utility */
+.blur {
+  filter: none !important;
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.28) 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0.18) 100%
+  ) !important;
+  backdrop-filter: blur(36px) saturate(1.75) brightness(1.08);
+  -webkit-backdrop-filter: blur(36px) saturate(1.75) brightness(1.08);
+  border: 1px solid rgba(255, 255, 255, 0.38);
+  box-shadow:
+    0 12px 40px rgba(8, 10, 14, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .blur {
+    background: rgba(248, 247, 243, 0.82) !important;
+  }
+}
+
 .steel-card-index {
   position: absolute;
   right: 0;
