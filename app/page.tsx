@@ -5,6 +5,7 @@ import Link from "next/link";
 import ScrollExpandKeyBenefits from "@/components/ScrollExpandKeyBenefits";
 import ScrollScrubHero from "@/components/ScrollScrubHero";
 import SiteFooter from "@/components/SiteFooter";
+import SteelTetrisBackground from "@/components/SteelTetrisBackground";
 
 const DELAY = ["", " d1", " d2", " d3"];
 
@@ -120,7 +121,8 @@ function Services() {
 
 function LightGaugeSteel() {
   return (
-    <section className="pnl-block pnl-block--dark" id="light-gauge-steel">
+    <section className="pnl-block pnl-block--dark pnl-block--tetris" id="light-gauge-steel">
+      <SteelTetrisBackground />
       <div className="pnl-container">
         <h2 className="section-h2 pnl-section-h2 pnl-section-h2--light reveal">
           LIGHT GAUGE STEEL: A FUTURE-PROOF ADVANTAGE
@@ -129,16 +131,22 @@ function LightGaugeSteel() {
         <div className="key-benefits-grid">
           {STEEL_PILLARS.map((p, i) => (
             <article key={p.title} className={`key-benefit-card reveal${DELAY[i % 2]}`}>
-              <h3 className="key-benefit-title">{p.title}</h3>
-              <SourceList items={p.points} dark />
+              <div className="key-benefit-card__glass" aria-hidden />
+              <div className="key-benefit-card__inner">
+                <h3 className="key-benefit-title">{p.title}</h3>
+                <SourceList items={p.points} dark />
+              </div>
             </article>
           ))}
 
           <article className="key-benefit-card key-benefit-card--wide reveal d2">
-            <h3 className="key-benefit-title">
-              The Result: a repeatable and adaptable building solution that is:
-            </h3>
-            <SourceList items={STEEL_RESULT} dark />
+            <div className="key-benefit-card__glass" aria-hidden />
+            <div className="key-benefit-card__inner">
+              <h3 className="key-benefit-title">
+                The Result: a repeatable and adaptable building solution that is:
+              </h3>
+              <SourceList items={STEEL_RESULT} dark />
+            </div>
           </article>
         </div>
       </div>

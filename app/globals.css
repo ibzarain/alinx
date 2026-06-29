@@ -2408,6 +2408,7 @@ footer.site-footer {
 .pnl-block--cream { background: var(--bg3); }
 .pnl-block--alt { background: var(--bg2); }
 .pnl-block--dark {
+  --city-grid: 56px;
   background: #0b1808;
   overflow: hidden;
 }
@@ -2417,10 +2418,38 @@ footer.site-footer {
   background-image:
     linear-gradient(rgba(122,158,74,0.1) 1px, transparent 1px),
     linear-gradient(90deg, rgba(122,158,74,0.1) 1px, transparent 1px);
-  background-size: 56px 56px;
+  background-size: var(--city-grid) var(--city-grid);
   pointer-events: none;
 }
 .pnl-block--dark > * { position: relative; z-index: 1; }
+
+/* Light gauge steel — Tetris building assembly background */
+.pnl-block--tetris {
+  isolation: isolate;
+}
+.pnl-block--tetris .steel-tetris-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0 !important;
+  pointer-events: none;
+  overflow: hidden;
+  mask-image: linear-gradient(to bottom, transparent 0%, black 5%, black 95%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 5%, black 95%, transparent 100%);
+}
+.steel-tetris-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  opacity: 0.88;
+}
+.steel-city-streams rect {
+  filter: drop-shadow(0 0 6px rgba(168, 198, 118, 0.22));
+}
+@media (prefers-reduced-motion: reduce) {
+  .steel-tetris-svg { opacity: 0.5; }
+  .steel-city-streams { display: none; }
+}
 
 /* Shared headings & copy */
 .pnl-page .pnl-section-h2 {
@@ -3527,20 +3556,54 @@ footer.site-footer {
   }
 }
 
-/* Light gauge steel — dark green cards */
+/* Light gauge steel — original cards with glass blur over tetris city */
+#light-gauge-steel .pnl-section-h2--light {
+  color: #e4f0d4;
+  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.55);
+}
 #light-gauge-steel .key-benefits-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: clamp(1rem, 1.6vw, 1.35rem);
   margin-top: clamp(2rem, 3.5vw, 3rem);
 }
+#light-gauge-steel .pnl-container {
+  position: relative;
+  z-index: 2;
+}
 #light-gauge-steel .key-benefit-card {
   position: relative;
-  padding: clamp(1.85rem, 2.6vw, 2.35rem) clamp(1.65rem, 2.2vw, 2.1rem);
-  background-color: #142210;
-  border: 1px solid rgba(122, 158, 74, 0.28);
+  overflow: hidden;
+  border: 1px solid rgba(122, 158, 74, 0.32);
   border-radius: 6px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.32);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.38);
+  isolation: isolate;
+}
+#light-gauge-steel .key-benefit-card__glass {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  transform: translateZ(0);
+  backdrop-filter: blur(32px) saturate(1.35) brightness(0.82);
+  -webkit-backdrop-filter: blur(32px) saturate(1.35) brightness(0.82);
+  background: linear-gradient(
+    160deg,
+    rgba(14, 26, 12, 0.88) 0%,
+    rgba(8, 18, 6, 0.92) 100%
+  );
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  #light-gauge-steel .key-benefit-card__glass {
+    background: rgba(14, 26, 12, 0.94);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+#light-gauge-steel .key-benefit-card__inner {
+  position: relative;
+  z-index: 1;
+  padding: clamp(1.85rem, 2.6vw, 2.35rem) clamp(1.65rem, 2.2vw, 2.1rem);
 }
 #light-gauge-steel .key-benefit-title {
   font-family: var(--font-barlow, 'Barlow Condensed', sans-serif);
@@ -3548,9 +3611,10 @@ footer.site-footer {
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.03em;
-  color: #d4ecb8;
+  color: #e4f0d4;
   line-height: 1.12;
   white-space: nowrap;
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.45);
 }
 #light-gauge-steel .key-benefit-card--wide {
   grid-column: 1 / -1;
@@ -3560,8 +3624,12 @@ footer.site-footer {
   max-width: 42ch;
 }
 #light-gauge-steel .key-benefit-card .pnl-source-list { margin-top: 1rem; }
+#light-gauge-steel .pnl-source-list--dark li {
+  color: rgba(214, 232, 196, 0.92);
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.35);
+}
 #light-gauge-steel .pnl-source-list--dark li::before {
-  background: rgba(122, 158, 74, 0.55);
+  background: rgba(168, 198, 118, 0.85);
 }
 
 /* Light gauge steel — 2-up light outcome cards */
