@@ -196,6 +196,70 @@ function popcount(mask: number): number {
   return n;
 }
 
+type GlyphGxRange = { gxMin: number; gxMax: number };
+
+function glyphGxRanges(
+  text: string,
+  style: HeroFontStyle,
+  fontSize: number
+): GlyphGxRange[] {
+  const measure = document.createElement("canvas").getContext("2d");
+  if (!measure) return [];
+
+  const size = fontSize * CELL_SUB;
+  measure.font = `${style.weight} ${size}px ${style.family}`;
+  const tracking = size * style.trackingEm;
+
+  const ranges: GlyphGxRange[] = [];
+  let cursor = 0;
+  for (let i = 0; i < text.length; i++) {
+    const w = measure.measureText(text[i]).width;
+    ranges.push({
+      gxMin: Math.floor(cursor / CELL_SUB),
+      gxMax: Math.floor((cursor + w - 1) / CELL_SUB),
+    });
+    cursor += w;
+    if (i < text.length - 1) cursor += tracking;
+  }
+  return ranges;
+}
+
+/** Trim a glyph's lowest row, then shift it down so it "falls" slightly. */
+function dropGlyphBottomRow(
+  cells: PixelCell[],
+  gxMin: number,
+  gxMax: number,
+  dropRows = 1
+): PixelCell[] {
+  const inGlyph = cells.filter((c) => c.gx >= gxMin && c.gx <= gxMax);
+  const rest = cells.filter((c) => c.gx < gxMin || c.gx > gxMax);
+  if (inGlyph.length === 0) return cells;
+
+  let bottomGy = 0;
+  for (const c of inGlyph) {
+    if (c.gy > bottomGy) bottomGy = c.gy;
+  }
+
+  const trimmed = inGlyph.filter((c) => c.gy < bottomGy);
+  const dropped = trimmed.map((c) => ({ ...c, gy: c.gy + dropRows }));
+  return [...rest, ...dropped];
+}
+
+function applyWordGlyphPatches(
+  mask: Omit<WordMask, "offsetX" | "offsetY">,
+  style: HeroFontStyle,
+  fontSize: number
+): Omit<WordMask, "offsetX" | "offsetY"> {
+  if (mask.word !== "EXTERIOR") return mask;
+
+  const ranges = glyphGxRanges(mask.word, style, fontSize);
+  const oRange = ranges[6];
+  if (!oRange) return mask;
+
+  const cells = dropGlyphBottomRow(mask.cells, oRange.gxMin, oRange.gxMax);
+  return finalizeMaskBounds({ ...mask, cells });
+}
+
 /** Drop lone antialias specks that read as stray dots between letters. */
 function pruneIsolatedCells(cells: PixelCell[]): PixelCell[] {
   const key = (gx: number, gy: number) => `${gx},${gy}`;
@@ -469,7 +533,7 @@ export async function buildMorphGrid(
   for (const w of upperWords) {
     const mask = rasterizeWord(w, style, cellSize, fontSize);
     if (!mask) return null;
-    local.push(mask);
+    local.push(applyWordGlyphPatches(mask, style, fontSize));
   }
 
   const placed: WordMask[] = alignWordsToBaseline(
