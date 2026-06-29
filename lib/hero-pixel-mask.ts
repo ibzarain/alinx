@@ -163,37 +163,56 @@ function paintTrackedText(
   }
 }
 
-function rowPixelCounts(cells: PixelCell[]): Map<number, number> {
-  const counts = new Map<number, number>();
-  for (const c of cells) {
-    counts.set(c.gy, (counts.get(c.gy) ?? 0) + 1);
+function paintTrackedTextCapAligned(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  x: number,
+  baselineY: number,
+  fontSize: number,
+  trackingEm: number
+) {
+  ctx.textBaseline = "alphabetic";
+  const refDescent = ctx.measureText("H").actualBoundingBoxDescent;
+  const tracking = fontSize * trackingEm;
+  let cursor = x;
+
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    const m = ctx.measureText(ch);
+    const y = baselineY - (m.actualBoundingBoxDescent - refDescent);
+    ctx.fillText(ch, cursor, y);
+    cursor += m.width;
+    if (i < text.length - 1) cursor += tracking;
   }
-  return counts;
 }
 
-/** Drop sparse bottom rows (e.g. round-letter antialias hang). */
-function trimDanglingBottomRows(cells: PixelCell[]): PixelCell[] {
-  if (cells.length === 0) return cells;
-
-  const counts = rowPixelCounts(cells);
-  let maxGy = 0;
-  for (const gy of counts.keys()) {
-    if (gy > maxGy) maxGy = gy;
+function popcount(mask: number): number {
+  let n = 0;
+  let m = mask;
+  while (m) {
+    n += m & 1;
+    m >>= 1;
   }
+  return n;
+}
 
-  let cutoff = maxGy;
-  while (cutoff > 0) {
-    const row = counts.get(cutoff) ?? 0;
-    const above = counts.get(cutoff - 1) ?? 0;
-    if (row > 0 && row <= 12 && above > row * 2) {
-      cutoff--;
-      continue;
+/** Drop lone antialias specks that read as stray dots between letters. */
+function pruneIsolatedCells(cells: PixelCell[]): PixelCell[] {
+  const key = (gx: number, gy: number) => `${gx},${gy}`;
+  const occupied = new Set(cells.map((c) => key(c.gx, c.gy)));
+
+  return cells.filter((c) => {
+    if (popcount(c.subMask) >= 6) return true;
+
+    let neighbors = 0;
+    for (let dy = -1; dy <= 1; dy++) {
+      for (let dx = -1; dx <= 1; dx++) {
+        if (!dx && !dy) continue;
+        if (occupied.has(key(c.gx + dx, c.gy + dy))) neighbors++;
+      }
     }
-    break;
-  }
-
-  if (cutoff === maxGy) return cells;
-  return cells.filter((c) => c.gy <= cutoff);
+    return neighbors >= 2;
+  });
 }
 
 function sampleRaster(
@@ -232,17 +251,17 @@ function sampleRaster(
   if (cells.length < 20) return null;
   if (cells.length > cols * rows * 0.52) return null;
 
-  const trimmed = trimDanglingBottomRows(cells);
-  if (trimmed.length < 20) return null;
+  const cleaned = pruneIsolatedCells(cells);
+  if (cleaned.length < 20) return null;
 
-  trimmed.sort((a, b) => a.order - b.order);
-  trimmed.forEach((c, idx) => {
-    c.order = idx / Math.max(trimmed.length - 1, 1);
+  cleaned.sort((a, b) => a.order - b.order);
+  cleaned.forEach((c, idx) => {
+    c.order = idx / Math.max(cleaned.length - 1, 1);
   });
 
   return {
     word: text,
-    cells: trimmed,
+    cells: cleaned,
     cols,
     rows,
     cellSize,
@@ -295,6 +314,46 @@ function unionMaskBounds(masks: WordMask[]) {
   return { minGx, minGy, maxGx, maxGy };
 }
 
+function fitFontSizeForWords(
+  texts: string[],
+  style: HeroFontStyle,
+  pixelCols: number,
+  baseFontSize: number
+): number {
+  const measure = document.createElement("canvas").getContext("2d");
+  if (!measure) return baseFontSize;
+
+  let size = baseFontSize;
+  const minSize = 10 * CELL_SUB;
+  const setFont = (s: number) => {
+    measure.font = `${style.weight} ${s}px ${style.family}`;
+  };
+
+  setFont(size);
+  while (size > minSize) {
+    const tooWide = texts.some(
+      (text) =>
+        measureTrackedWidth(measure, text, style.trackingEm, size) >
+        pixelCols * 0.94
+    );
+    if (!tooWide) break;
+    size -= 1;
+    setFont(size);
+  }
+
+  return size;
+}
+
+function alignWordsToBaseline(masks: WordMask[]): WordMask[] {
+  const { maxGy: baselineGy } = unionMaskBounds(masks);
+  return masks.map((mask) => {
+    const dy = baselineGy - mask.maxGy;
+    if (dy === 0) return mask;
+    const shifted = mask.cells.map((c) => ({ ...c, gy: c.gy + dy }));
+    return finalizeMaskBounds({ ...mask, cells: shifted });
+  });
+}
+
 function rasterizeOnce(
   text: string,
   style: HeroFontStyle,
@@ -329,22 +388,21 @@ function rasterizeOnce(
   const ctx = off.getContext("2d", { willReadFrequently: true });
   if (!ctx) return null;
 
-  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingEnabled = false;
   ctx.fillStyle = "#000";
   ctx.fillRect(0, 0, pixelCols, pixelRows);
   ctx.fillStyle = "#fff";
   ctx.font = `${style.weight} ${size}px ${style.family}`;
-  ctx.textBaseline = "alphabetic";
   ctx.textAlign = "left";
-  const baselinePad = CELL_SUB * 2;
-  paintTrackedText(
+  const bottomPad = CELL_SUB * 2;
+  const baselineY = pixelRows - bottomPad;
+  paintTrackedTextCapAligned(
     ctx,
     text,
     0,
-    pixelRows - baselinePad,
+    baselineY,
     size,
-    style.trackingEm,
-    "fill"
+    style.trackingEm
   );
 
   return sampleRaster(
@@ -360,21 +418,21 @@ function rasterizeOnce(
 function rasterizeWord(
   word: string,
   style: HeroFontStyle,
-  cellSize: number
+  cellSize: number,
+  fontSize: number
 ): Omit<WordMask, "offsetX" | "offsetY"> | null {
   const text = word.toUpperCase();
   const cols = GRID_COLS;
   const rows = GRID_ROWS;
-  const base = Math.round(rows * 0.82);
 
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 3; i++) {
     const mask = rasterizeOnce(
       text,
       style,
       cellSize,
       cols,
       rows,
-      base - i * 2
+      fontSize - i * 2
     );
     if (mask) return mask;
   }
@@ -385,7 +443,7 @@ function rasterizeWord(
     cellSize,
     cols,
     rows,
-    base - 4
+    fontSize - 4
   );
 }
 
@@ -396,20 +454,33 @@ export async function buildMorphGrid(
 ): Promise<MorphGrid | null> {
   await ensureHeroFonts(style);
 
+  const cols = GRID_COLS;
+  const rows = GRID_ROWS;
+  const pixelCols = cols * CELL_SUB;
+  const upperWords = words.map((w) => w.toUpperCase());
+  const fontSize = fitFontSizeForWords(
+    upperWords,
+    style,
+    pixelCols,
+    Math.round(rows * 0.82)
+  );
+
   const local: NonNullable<ReturnType<typeof rasterizeWord>>[] = [];
-  for (const w of words) {
-    const mask = rasterizeWord(w, style, cellSize);
+  for (const w of upperWords) {
+    const mask = rasterizeWord(w, style, cellSize, fontSize);
     if (!mask) return null;
     local.push(mask);
   }
 
-  const placed: WordMask[] = local.map((m) =>
-    finalizeMaskBounds({
-      ...m,
-      cellSize,
-      offsetX: 0,
-      offsetY: 0,
-    })
+  const placed: WordMask[] = alignWordsToBaseline(
+    local.map((m) =>
+      finalizeMaskBounds({
+        ...m,
+        cellSize,
+        offsetX: 0,
+        offsetY: 0,
+      })
+    )
   );
 
   const { minGx, minGy, maxGx, maxGy } = unionMaskBounds(placed);
@@ -483,17 +554,16 @@ export function drawMorphFrame(
     ctx.globalAlpha = alpha;
     ctx.fillStyle = pixelColor;
 
-    const block = cellSize + 1;
     const ix = Math.floor(x);
     const iy = Math.floor(y);
 
     if (cell.subMask === FULL_SUB_MASK) {
-      ctx.fillRect(ix, iy, block, block);
+      ctx.fillRect(ix, iy, cellSize + 1, cellSize + 1);
       return;
     }
 
     const subSpan = cellSize / CELL_SUB;
-    const subSize = Math.ceil(subSpan) + 1;
+    const subSize = Math.max(1, Math.ceil(subSpan));
     for (let sy = 0; sy < CELL_SUB; sy++) {
       for (let sx = 0; sx < CELL_SUB; sx++) {
         const bit = sy * CELL_SUB + sx;

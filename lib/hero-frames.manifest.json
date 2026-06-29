@@ -2,7 +2,7 @@
   "frameCount": 240,
   "fps": 24,
   "format": "webp",
-  "pattern": "https://alinx.nyc3.cdn.digitaloceanspaces.com/frames/frame_%04d.webp",
+  "pattern": "/cdn-frames/frame_%04d.webp",
   "width": 1920,
   "height": 1080,
   "cacheKey": "cdn-frames-v3-webp-q85"

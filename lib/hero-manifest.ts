@@ -1,4 +1,5 @@
 import manifest from "./hero-frames.manifest.json";
+import { ALINX_CDN } from "./cdn";
 
 export type HeroFrameManifest = {
   frameCount: number;
@@ -21,10 +22,26 @@ export const HERO_END_TIME_SEC = HERO_MANIFEST.endTimeSec;
 export const HERO_FRAME_PATTERN = HERO_MANIFEST.pattern;
 export const HERO_FRAME_CACHE_KEY = HERO_MANIFEST.cacheKey;
 
-export function heroFrameSrcForManifest(index: number, m: HeroFrameManifest): string {
+export function heroFrameSrcCandidates(index: number, m: HeroFrameManifest): string[] {
   const n = String(index + 1).padStart(4, "0");
-  const path = m.pattern.replace("%04d", n);
-  return `${path}?v=${encodeURIComponent(m.cacheKey)}`;
+  const ext = m.format ?? "webp";
+  const q = `?v=${encodeURIComponent(m.cacheKey)}`;
+  const fromPattern = m.pattern.includes("%04d")
+    ? `${m.pattern.replace("%04d", n)}${q}`
+    : `${m.pattern}${q}`;
+
+  const local = `/hero/frames/frame_${n}.${ext}${q}`;
+  const proxied = `/cdn-frames/frame_${n}.${ext}${q}`;
+  const direct = `${ALINX_CDN}/frames/frame_${n}.${ext}${q}`;
+
+  const out = [local, proxied];
+  if (!out.includes(fromPattern)) out.push(fromPattern);
+  if (!out.includes(direct)) out.push(direct);
+  return out;
+}
+
+export function heroFrameSrcForManifest(index: number, m: HeroFrameManifest): string {
+  return heroFrameSrcCandidates(index, m)[0];
 }
 
 export function scrubStartIndex(m: HeroFrameManifest = HERO_MANIFEST): number {

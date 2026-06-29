@@ -3,7 +3,7 @@
 import { drawCover } from "@/lib/scroll-composite";
 import {
   HERO_MANIFEST,
-  heroFrameSrcForManifest,
+  heroFrameSrcCandidates,
   mapScrollToFrameBlend,
   type HeroFrameManifest,
 } from "@/lib/hero-manifest";
@@ -25,19 +25,31 @@ function getDpr(): number {
   return Math.min(window.devicePixelRatio || 1, 2.5);
 }
 
-function loadHeroFrameImage(
-  index: number,
-  manifest: HeroFrameManifest
-): Promise<HTMLImageElement | null> {
+function tryLoadHeroImage(src: string): Promise<HTMLImageElement | null> {
   return new Promise((resolve) => {
     const img = new Image();
     img.decoding = "async";
+    if (src.startsWith("http")) img.crossOrigin = "anonymous";
     img.onload = () => {
       resolve(img.naturalWidth > 0 ? img : null);
     };
     img.onerror = () => resolve(null);
-    img.src = heroFrameSrcForManifest(index, manifest);
+    img.src = src;
   });
+}
+
+function loadHeroFrameImage(
+  index: number,
+  manifest: HeroFrameManifest
+): Promise<HTMLImageElement | null> {
+  const sources = heroFrameSrcCandidates(index, manifest);
+  return (async () => {
+    for (const src of sources) {
+      const img = await tryLoadHeroImage(src);
+      if (img) return img;
+    }
+    return null;
+  })();
 }
 
 export default function ScrollScrubHero() {
@@ -196,8 +208,8 @@ export default function ScrollScrubHero() {
       const first = await loadHeroFrameImage(startIdx, manifest);
       if (cancelled || !first) {
         console.error(
-          "Hero: failed to load first frame.",
-          heroFrameSrcForManifest(startIdx, manifest)
+          "Hero: failed to load first frame. Tried:",
+          heroFrameSrcCandidates(startIdx, manifest).join(", ")
         );
         return false;
       }
