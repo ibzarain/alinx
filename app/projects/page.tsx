@@ -58,7 +58,6 @@ export default function ProjectsPage() {
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={p.image} alt={p.name} loading="lazy" />
                   </div>
-                  <span className="proj-photo-pdf" aria-hidden>PDF</span>
                 </div>
                 <div className="proj-photo-name">{p.name}</div>
               </a>

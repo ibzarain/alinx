@@ -355,7 +355,6 @@ export default function ScrollScrubHero() {
               pointerEvents: contentLive && headline.opacity >= 0.1 ? "auto" : "none",
             }}
           >
-            <span className="hero-kicker" aria-hidden />
             <h1 className="hero-h1">
               <span className="line1">Vertically</span>
               <span className="line2">Integrated.</span>

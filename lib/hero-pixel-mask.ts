@@ -185,7 +185,7 @@ function trimDanglingBottomRows(cells: PixelCell[]): PixelCell[] {
   while (cutoff > 0) {
     const row = counts.get(cutoff) ?? 0;
     const above = counts.get(cutoff - 1) ?? 0;
-    if (row > 0 && row <= 8 && above > row * 3) {
+    if (row > 0 && row <= 12 && above > row * 2) {
       cutoff--;
       continue;
     }
@@ -194,34 +194,6 @@ function trimDanglingBottomRows(cells: PixelCell[]): PixelCell[] {
 
   if (cutoff === maxGy) return cells;
   return cells.filter((c) => c.gy <= cutoff);
-}
-
-/** Extend every letter's floor row so all glyphs kiss the same baseline. */
-function sealWordFloor(cells: PixelCell[]): PixelCell[] {
-  if (cells.length === 0) return cells;
-
-  let floorGy = 0;
-  for (const c of cells) {
-    if (c.gy > floorGy) floorGy = c.gy;
-  }
-
-  const bottomSubRow = CELL_SUB - 1;
-  for (const c of cells) {
-    if (c.gy !== floorGy || c.subMask === FULL_SUB_MASK) continue;
-    let mask = c.subMask;
-    for (let sx = 0; sx < CELL_SUB; sx++) {
-      for (let sy = 0; sy < bottomSubRow; sy++) {
-        const bit = sy * CELL_SUB + sx;
-        if ((mask >> bit) & 1) {
-          mask |= 1 << (bottomSubRow * CELL_SUB + sx);
-          break;
-        }
-      }
-    }
-    c.subMask = mask;
-  }
-
-  return cells;
 }
 
 function sampleRaster(
@@ -260,7 +232,7 @@ function sampleRaster(
   if (cells.length < 20) return null;
   if (cells.length > cols * rows * 0.52) return null;
 
-  const trimmed = sealWordFloor(trimDanglingBottomRows(cells));
+  const trimmed = trimDanglingBottomRows(cells);
   if (trimmed.length < 20) return null;
 
   trimmed.sort((a, b) => a.order - b.order);
@@ -362,9 +334,18 @@ function rasterizeOnce(
   ctx.fillRect(0, 0, pixelCols, pixelRows);
   ctx.fillStyle = "#fff";
   ctx.font = `${style.weight} ${size}px ${style.family}`;
-  ctx.textBaseline = "bottom";
+  ctx.textBaseline = "alphabetic";
   ctx.textAlign = "left";
-  paintTrackedText(ctx, text, 0, pixelRows - 1, size, style.trackingEm, "fill");
+  const baselinePad = CELL_SUB * 2;
+  paintTrackedText(
+    ctx,
+    text,
+    0,
+    pixelRows - baselinePad,
+    size,
+    style.trackingEm,
+    "fill"
+  );
 
   return sampleRaster(
     ctx.getImageData(0, 0, pixelCols, pixelRows).data,
@@ -505,12 +486,9 @@ export function drawMorphFrame(
     const block = cellSize + 1;
     const ix = Math.floor(x);
     const iy = Math.floor(y);
-    const floorRow = cell.gy === mask.maxGy;
-    const canvasBottom = height;
 
     if (cell.subMask === FULL_SUB_MASK) {
-      const rectH = floorRow ? Math.max(block, canvasBottom - iy) : block;
-      ctx.fillRect(ix, iy, block, rectH);
+      ctx.fillRect(ix, iy, block, block);
       return;
     }
 
@@ -522,11 +500,7 @@ export function drawMorphFrame(
         if ((cell.subMask >> bit) & 1) {
           const rx = Math.floor(ix + sx * subSpan);
           const ry = Math.floor(iy + sy * subSpan);
-          let rh = subSize;
-          if (floorRow && sy === CELL_SUB - 1) {
-            rh = Math.max(subSize + 1, canvasBottom - ry);
-          }
-          ctx.fillRect(rx, ry, subSize, rh);
+          ctx.fillRect(rx, ry, subSize, subSize);
         }
       }
     }

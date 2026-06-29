@@ -68,7 +68,6 @@ function Hero() {
           Back
         </Link>
         <div>
-          <span className="pnl-hero-kicker" aria-hidden />
           <h1 className="pnl-hero-title">Turnkey<br />Modular</h1>
           <p className="pnl-hero-lead">
             Using Metaloq technology, A-Linx delivers modular structures built to the
@@ -76,9 +75,6 @@ function Hero() {
           </p>
         </div>
       </div>
-      <a href="#vol-true" className="pnl-scroll-cue" aria-label="Scroll to explore">
-        <span className="pnl-scroll-cue-line" />
-      </a>
     </section>
   );
 }
@@ -89,7 +85,6 @@ function TrueVolumetric() {
     <section className="pnl-block pnl-block--light" id="vol-true">
       <div className="pnl-container">
         <div className="pnl-editorial reveal">
-          <span className="pnl-kicker" aria-hidden />
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/images/volumetric/true-volumetric-logo.svg" alt="True Volumetric Logo" className="vol-logo" />
           <h2 className="section-h2 pnl-section-h2">
@@ -117,7 +112,6 @@ function Metaloq() {
       <div className="pnl-container">
         <div className="pnl-feature reveal">
           <div className="pnl-feature-copy">
-            <span className="pnl-kicker" aria-hidden />
             <h2 className="section-h2 pnl-section-h2">
               Metaloq technology: the heart of an industry-changing innovation
             </h2>
@@ -165,7 +159,6 @@ function Disrupt() {
     <section className="pnl-block pnl-block--light">
       <div className="pnl-container">
         <div className="pnl-editorial reveal">
-          <span className="pnl-kicker" aria-hidden />
           <h2 className="section-h2 pnl-section-h2">Designed to disrupt construction conventions</h2>
           <p className="pnl-deck pnl-deck--wide pnl-deck--gap">
             Radically altering the construction landscape across a wide spectrum of case uses, one

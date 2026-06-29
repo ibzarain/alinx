@@ -26,7 +26,6 @@ function Hero() {
           Back
         </Link>
         <div className="pnl-hero-body">
-          <span className="pnl-hero-kicker" aria-hidden />
           <h1 className="pnl-hero-title">Careers</h1>
         </div>
       </div>

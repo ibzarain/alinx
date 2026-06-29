@@ -1065,20 +1065,6 @@ html.hero-scroll-lock nav.site-nav {
 
 .proj-photo-card:hover .proj-photo-crop img { transform: scale(1.04); }
 
-.proj-photo-pdf {
-  position: absolute;
-  top: 0.75rem;
-  right: 0.75rem;
-  font-family: var(--font-space-mono, 'Space Mono', monospace);
-  font-size: 0.55rem;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  padding: 0.3rem 0.55rem;
-  background: rgba(8, 10, 14, 0.82);
-  color: var(--olive);
-  border: 1px solid rgba(122, 158, 74, 0.35);
-}
-
 .proj-photo-name {
   margin-top: 0.85rem;
   font-family: var(--font-barlow, 'Barlow Condensed', sans-serif);

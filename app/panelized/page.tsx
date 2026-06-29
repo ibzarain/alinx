@@ -169,7 +169,6 @@ function Hero() {
           Back
         </Link>
         <div className="">
-          <span className="pnl-hero-kicker" aria-hidden />
           <h1 className="pnl-hero-title">Panelized<br />Components</h1>
           <p className="pnl-hero-lead">
             A-Linx is a comprehensive supplier of panelized interior and fully-finished
@@ -177,9 +176,6 @@ function Hero() {
           </p>
         </div>
       </div>
-      <a href="#pnl-advantages" className="pnl-scroll-cue" aria-label="Scroll to explore">
-        <span className="pnl-scroll-cue-line" />
-      </a>
     </section>
   );
 }
@@ -190,7 +186,6 @@ function StructuralInnovation() {
     <section className="pnl-block pnl-block--light">
       <div className="pnl-container">
         <div className="pnl-editorial reveal">
-          <span className="pnl-kicker" aria-hidden />
           <h2 className="section-h2 pnl-section-h2">
             Structural innovation that makes off-site fabrication the undeniable option of choice
           </h2>
@@ -232,7 +227,6 @@ function FeatureSplit({
       <div className="pnl-container">
         <div className={`pnl-feature reveal${reverse ? " pnl-feature--reverse" : ""}`}>
           <div className="pnl-feature-copy">
-            <span className="pnl-kicker" aria-hidden />
             <h2 className="section-h2 pnl-section-h2">{title}</h2>
             {body && <p className="pnl-deck pnl-deck--wide">{body}</p>}
             {children}
@@ -277,7 +271,6 @@ function Advantages() {
     <section className="pnl-block pnl-block--dark" id="pnl-advantages">
       <div className="pnl-container">
         <h2 className="section-h2 pnl-section-h2 pnl-section-h2--light reveal">
-          <span className="pnl-kicker pnl-kicker--light" aria-hidden />
           Six advantages you can&apos;t afford to ignore:
         </h2>
         <div className="pnl-adv-grid">
@@ -293,7 +286,6 @@ function Advantages() {
           ))}
         </div>
         <h2 className="section-h2 pnl-section-h2 pnl-section-h2--light pnl-section-h2--spaced reveal">
-          <span className="pnl-kicker pnl-kicker--light" aria-hidden />
           ... and six more:
         </h2>
         <div className="pnl-adv-grid">
@@ -492,7 +484,6 @@ function PanelizedSystem() {
     <section className="pnl-block pnl-block--light">
       <div className="pnl-container">
         <div className="pnl-system-head reveal">
-          <span className="pnl-kicker" aria-hidden />
           <h2 className="section-h2 pnl-section-h2">
             Elements of A-Linx panelized system
           </h2>
@@ -521,7 +512,6 @@ function PrecisionSection() {
     <section className="pnl-block pnl-block--cream">
       <div className="pnl-container">
         <h2 className="section-h2 pnl-section-h2 reveal">
-          <span className="pnl-kicker" aria-hidden />
           Precision, economy and a faster path to a watertight superstructure
         </h2>
         <div className="pnl-outcome-grid">
@@ -583,7 +573,6 @@ function SavingsSection() {
       <div className="pnl-container">
         <div className="pnl-savings-head reveal">
           <div className="pnl-savings-intro">
-            <span className="pnl-kicker" aria-hidden />
             <h2 className="section-h2 pnl-section-h2">Bottom-line savings that deliver a competitive edge</h2>
             <p className="pnl-deck pnl-deck--wide">
               The A-Linx Light-Gauge Steel system delivers a revolutionary competitive advantage -
