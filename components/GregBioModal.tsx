@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
 const GREG_BIO = {
   paragraphs: [
@@ -25,6 +26,12 @@ export default function GregBioModal({
   open: boolean;
   onClose: () => void;
 }) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   useEffect(() => {
     if (!open) return;
 
@@ -40,10 +47,15 @@ export default function GregBioModal({
     };
   }, [open, onClose]);
 
-  if (!open) return null;
+  if (!open || !mounted) return null;
 
-  return (
-    <div className="bio-modal" role="dialog" aria-modal="true" aria-labelledby="greg-bio-title">
+  return createPortal(
+    <div
+      className="bio-modal bio-modal--light"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="greg-bio-title"
+    >
       <button
         type="button"
         className="bio-modal-backdrop"
@@ -51,27 +63,30 @@ export default function GregBioModal({
         aria-label="Close bio"
       />
       <div className="bio-modal-panel">
-        <button
-          type="button"
-          className="bio-modal-close"
-          onClick={onClose}
-          aria-label="Close"
-        >
-          <svg viewBox="0 0 14 14" fill="none" aria-hidden>
-            <path
-              d="M2 2L12 12M12 2L2 12"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-            />
-          </svg>
-        </button>
-        <div className="team-bio-panel">
-          <h3 className="team-bio-title" id="greg-bio-title">
-            Greg Geml
-            <br />
-            General Manager
-          </h3>
+        <header className="bio-modal-header">
+          <div className="bio-modal-heading">
+            <h2 className="bio-modal-name" id="greg-bio-title">
+              Greg Geml
+            </h2>
+            <p className="bio-modal-role">General Manager</p>
+          </div>
+          <button
+            type="button"
+            className="bio-modal-close"
+            onClick={onClose}
+            aria-label="Close"
+          >
+            <svg viewBox="0 0 14 14" fill="none" aria-hidden>
+              <path
+                d="M2 2L12 12M12 2L2 12"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
+            </svg>
+          </button>
+        </header>
+        <div className="bio-modal-body team-bio-panel">
           <p>{GREG_BIO.paragraphs[0]}</p>
           <p>{GREG_BIO.paragraphs[1]}</p>
           <p>{GREG_BIO.paragraphs[2]}</p>
@@ -83,6 +98,7 @@ export default function GregBioModal({
           <p>{GREG_BIO.paragraphs[3]}</p>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

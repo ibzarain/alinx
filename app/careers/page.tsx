@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import Link from "next/link";
+import PageHead from "@/components/PageHead";
 import SiteFooter from "@/components/SiteFooter";
 
 function useScrollReveal() {
@@ -15,30 +15,16 @@ function useScrollReveal() {
   }, []);
 }
 
-function Hero() {
-  return (
-    <section className="pnl-hero">
-      <div className="pnl-hero-bg" aria-hidden />
-      <div className="pnl-hero-grid-overlay" aria-hidden />
-      <div className="pnl-hero-inner">
-        <Link href="/" className="inner-hero-back">
-          <svg viewBox="0 0 14 14" fill="none"><path d="M9 2L4 7L9 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
-          Back
-        </Link>
-        <div className="pnl-hero-body">
-          <h1 className="pnl-hero-title">Careers</h1>
-        </div>
-      </div>
-    </section>
-  );
-}
-
 export default function CareersPage() {
   useScrollReveal();
 
   return (
     <div className="pnl-page">
-      <Hero />
+      <section className="page-hero-band" data-nav-theme="dark">
+        <div className="pnl-container">
+          <PageHead title="Careers" theme="dark" />
+        </div>
+      </section>
       <section className="pnl-block pnl-block--light careers-page-body">
         <div className="pnl-container">
           <p className="careers-page-message reveal">Please check back later</p>
