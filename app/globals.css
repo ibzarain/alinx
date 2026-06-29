@@ -2405,6 +2405,21 @@ footer.site-footer {
 }
 .pnl-block--flush-top { padding-top: 0; }
 .pnl-block--light { background: var(--bg2); }
+.pnl-block--light-grid,
+.pnl-block--grid.pnl-block--light {
+  --city-grid: 56px;
+  overflow: hidden;
+}
+.pnl-block--grid.pnl-block--light::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(122,158,74,0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(122,158,74,0.12) 1px, transparent 1px);
+  background-size: var(--city-grid) var(--city-grid);
+  pointer-events: none;
+}
+.pnl-block--grid.pnl-block--light > * { position: relative; z-index: 1; }
 .pnl-block--cream { background: var(--bg3); }
 .pnl-block--alt { background: var(--bg2); }
 .pnl-block--dark {
@@ -2433,22 +2448,60 @@ footer.site-footer {
   z-index: 0 !important;
   pointer-events: none;
   overflow: hidden;
+}
+.pnl-block--dark.pnl-block--tetris .steel-tetris-bg {
   mask-image: linear-gradient(to bottom, transparent 0%, black 5%, black 95%, transparent 100%);
   -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 5%, black 95%, transparent 100%);
 }
+.steel-tetris-bg--light {
+  mask-image: linear-gradient(to bottom, transparent 0%, black 4%, black 96%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 4%, black 96%, transparent 100%);
+}
 .steel-tetris-svg {
   position: absolute;
-  top: 0;
-  left: 0;
+  inset: 0;
   display: block;
+  width: 100%;
+  height: 100%;
   opacity: 0.88;
+}
+.steel-tetris-bg--light .steel-tetris-svg {
+  opacity: 0.72;
 }
 .steel-city-streams rect {
   filter: drop-shadow(0 0 6px rgba(168, 198, 118, 0.22));
 }
+.steel-tetris-bg--light .steel-city-streams rect {
+  filter: drop-shadow(0 0 4px rgba(122, 158, 74, 0.18));
+}
+
+/* Factory conveyor — panelized advantages lower half */
+.pnl-block--conveyor {
+  isolation: isolate;
+}
+.pnl-block--conveyor .steel-conveyor-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0 !important;
+  pointer-events: none;
+  overflow: hidden;
+  mask-image: linear-gradient(to bottom, transparent 0%, black 6%, black 94%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 6%, black 94%, transparent 100%);
+}
+.steel-conveyor-svg {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  display: block;
+  opacity: 0.9;
+}
+.steel-conveyor-panels rect {
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.35));
+}
 @media (prefers-reduced-motion: reduce) {
   .steel-tetris-svg { opacity: 0.5; }
   .steel-city-streams { display: none; }
+  .steel-conveyor-panels { display: none; }
 }
 
 /* Shared headings & copy */
@@ -2712,19 +2765,14 @@ footer.site-footer {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 1px;
-  background: rgba(122,158,74,0.16);
+  background: var(--border);
   margin-top: clamp(1.5rem, 3vw, 2.25rem);
-  border: 1px solid rgba(122,158,74,0.12);
+  border: 1px solid var(--border);
 }
 .pnl-adv-card {
-  background: rgba(255,255,255,0.028);
+  background: var(--bg2);
   padding: 1.85rem 1.65rem 2rem;
-  transition: background 0.35s, transform 0.35s;
   min-height: 100%;
-}
-.pnl-adv-card:hover {
-  background: rgba(122,158,74,0.1);
-  transform: translateY(-3px);
 }
 .pnl-adv-card-top {
   display: flex;
@@ -2741,7 +2789,7 @@ footer.site-footer {
   font-family: var(--font-space-mono, 'Space Mono', monospace);
   font-size: 0.58rem;
   letter-spacing: 0.18em;
-  color: rgba(200,168,78,0.38);
+  color: rgba(122, 158, 74, 0.45);
 }
 .pnl-adv-title {
   font-family: var(--font-barlow, 'Barlow Condensed', sans-serif);
@@ -2749,13 +2797,13 @@ footer.site-footer {
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #d4ecb8;
+  color: var(--text);
   margin-bottom: 0.75rem;
   line-height: 1.12;
 }
 .pnl-adv-text {
   font-size: 0.86rem;
-  color: rgba(192,224,152,0.58);
+  color: var(--text2);
   line-height: 1.68;
 }
 .pnl-adv-result {
@@ -3632,6 +3680,45 @@ footer.site-footer {
   background: rgba(168, 198, 118, 0.85);
 }
 
+/* Panelized advantages — city assembly behind solid cards */
+#pnl-advantages {
+  --city-grid: 56px;
+  overflow: hidden;
+  isolation: isolate;
+}
+#pnl-advantages::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image:
+    linear-gradient(rgba(122, 158, 74, 0.11) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(122, 158, 74, 0.11) 1px, transparent 1px);
+  background-size: var(--city-grid) var(--city-grid);
+  pointer-events: none;
+}
+#pnl-advantages > .pnl-container {
+  position: relative;
+  z-index: 2;
+}
+#pnl-advantages .steel-tetris-bg {
+  z-index: 1 !important;
+}
+#pnl-advantages .steel-tetris-bg--light .steel-tetris-svg {
+  opacity: 0.82;
+}
+#pnl-advantages .pnl-section-h2 {
+  max-width: 28ch;
+}
+#pnl-advantages .pnl-adv-card {
+  box-shadow: 0 2px 16px rgba(20, 24, 31, 0.04);
+}
+#pnl-advantages .pnl-adv-icon {
+  margin-bottom: 1rem;
+}
+#pnl-advantages .pnl-adv-title {
+  color: var(--olive2);
+}
 /* Light gauge steel — 2-up light outcome cards */
 .pnl-outcome-grid--quad { grid-template-columns: repeat(2, 1fr); }
 .pnl-outcome-grid--quad .pnl-outcome-title { font-size: clamp(1.1rem, 1.8vw, 1.3rem); }

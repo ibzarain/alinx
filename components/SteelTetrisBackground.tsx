@@ -26,10 +26,16 @@ import { useEffect, useRef } from "react";
 const MAX_CONCURRENT = 8;
 const SPAWN_GAP_MIN = 70;
 const SPAWN_GAP_MAX = 320;
-/** Shared fall speed — all pieces move at the same rate */
-const FALL_MS_PER_ROW = 165;
-const PLACED_OPACITY = 0.58;
-const FINAL_OPACITY = 0.68;
+
+type TetrisVariant = "dark" | "light";
+
+const TUNE: Record<
+  TetrisVariant,
+  { placed: number; final: number; falling: number; fallMs: number }
+> = {
+  dark: { placed: 0.58, final: 0.68, falling: 0.86, fallMs: 165 },
+  light: { placed: 0.5, final: 0.62, falling: 0.72, fallMs: 175 },
+};
 
 function cellRect(col: number, row: number, material: string, opacity: number) {
   const x = col * CITY_GRID;
@@ -69,13 +75,18 @@ function canSpawn(drop: CityDrop, active: FallingDrop[]): boolean {
   );
 }
 
-export default function SteelTetrisBackground() {
+export default function SteelTetrisBackground({
+  variant = "dark",
+}: {
+  variant?: TetrisVariant;
+}) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const placedRef = useRef<SVGGElement>(null);
   const streamsRef = useRef<SVGGElement>(null);
 
   useEffect(() => {
+    const tune = TUNE[variant];
     const wrap = wrapRef.current;
     const svg = svgRef.current;
     const placedLayer = placedRef.current;
@@ -107,14 +118,14 @@ export default function SteelTetrisBackground() {
     );
     observer.observe(wrap);
 
-    function renderPlaced(opacity = PLACED_OPACITY) {
+    function renderPlaced(opacity = tune.placed) {
       placedLayer!.innerHTML = gridRects(grid, opacity);
     }
 
     function renderFalling() {
       let html = "";
       for (const { piece } of active) {
-        html += pieceRects(piece, 0.86);
+        html += pieceRects(piece, tune.falling);
       }
       streamsLayer!.innerHTML = html;
     }
@@ -125,7 +136,7 @@ export default function SteelTetrisBackground() {
       active = [];
       queue = [];
       streamsLayer!.innerHTML = "";
-      renderPlaced(FINAL_OPACITY);
+      renderPlaced(tune.final);
     }
 
     function finishCity() {
@@ -134,12 +145,15 @@ export default function SteelTetrisBackground() {
       cancelAnimationFrame(raf);
     }
 
-    function startSequence() {
-      if (complete) {
-        showFinalCity();
-        return;
-      }
+    function resetAndStart() {
+      complete = false;
+      cancelAnimationFrame(raf);
+      lastTs = 0;
+      spawnTimer = 0;
+      startSequence();
+    }
 
+    function startSequence() {
       active = [];
       grid = createEmptyGrid(cols, buildRows);
       placePrebuiltCity(grid, cols, buildRows);
@@ -181,7 +195,7 @@ export default function SteelTetrisBackground() {
     function tickFalling(dt: number) {
       for (const item of active) {
         if (isDropLocked(item.drop, item.piece)) continue;
-        item.piece.y += dt / FALL_MS_PER_ROW;
+        item.piece.y += dt / tune.fallMs;
       }
 
       const locking = active.filter((item) => isDropLocked(item.drop, item.piece));
@@ -201,29 +215,6 @@ export default function SteelTetrisBackground() {
       renderFalling();
     }
 
-    function layout() {
-      const rect = wrap!.getBoundingClientRect();
-      const dims = gridDims(rect.width, rect.height);
-      const sizeChanged = dims.cols !== prevCols || dims.rows !== prevRows;
-
-      cols = dims.cols;
-      rows = dims.rows;
-      buildRows = buildingRows(rows);
-
-      const svgW = cols * CITY_GRID;
-      const svgH = rows * CITY_GRID;
-      svg!.setAttribute("viewBox", `0 0 ${svgW} ${svgH}`);
-      svg!.style.width = `${svgW}px`;
-      svg!.style.height = `${svgH}px`;
-
-      if (sizeChanged) {
-        prevCols = cols;
-        prevRows = rows;
-        cancelAnimationFrame(raf);
-        startSequence();
-      }
-    }
-
     function tick(ts: number) {
       if (complete) return;
       raf = requestAnimationFrame(tick);
@@ -236,23 +227,46 @@ export default function SteelTetrisBackground() {
       trySpawn(dt);
     }
 
-    layout();
+    function applyLayout(width: number, height: number) {
+      if (width < 1 || height < 1) return;
 
-    const onResize = () => {
-      lastTs = 0;
-      layout();
-    };
-    window.addEventListener("resize", onResize);
+      const dims = gridDims(width, height);
+      const sizeChanged = dims.cols !== prevCols || dims.rows !== prevRows;
+
+      cols = dims.cols;
+      rows = dims.rows;
+      buildRows = buildingRows(rows);
+
+      const svgW = cols * CITY_GRID;
+      const svgH = rows * CITY_GRID;
+      svg!.setAttribute("viewBox", `0 0 ${svgW} ${svgH}`);
+      svg!.style.width = "100%";
+      svg!.style.height = "100%";
+
+      if (sizeChanged) {
+        prevCols = cols;
+        prevRows = rows;
+        resetAndStart();
+      }
+    }
+
+    const ro = new ResizeObserver(([entry]) => {
+      applyLayout(entry.contentRect.width, entry.contentRect.height);
+    });
+    ro.observe(wrap);
+
+    const rect = wrap.getBoundingClientRect();
+    applyLayout(rect.width, rect.height);
 
     return () => {
       cancelAnimationFrame(raf);
       observer.disconnect();
-      window.removeEventListener("resize", onResize);
+      ro.disconnect();
     };
-  }, []);
+  }, [variant]);
 
   return (
-    <div ref={wrapRef} className="steel-tetris-bg" aria-hidden>
+    <div ref={wrapRef} className={`steel-tetris-bg steel-tetris-bg--${variant}`} aria-hidden>
       <svg
         ref={svgRef}
         className="steel-tetris-svg"

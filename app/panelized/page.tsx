@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import SiteFooter from "@/components/SiteFooter";
+import SteelTetrisBackground from "@/components/SteelTetrisBackground";
 
 function useScrollReveal() {
   useEffect(() => {
@@ -266,38 +267,43 @@ function FactoryBand() {
 }
 
 /* ─── ADVANTAGES ─────────────────────────────────── */
+function AdvCard({
+  a,
+  index,
+  icon,
+}: {
+  a: { title: string[]; text: string };
+  index: number;
+  icon: ReactNode;
+}) {
+  return (
+    <div className={`pnl-adv-card reveal${DELAY[index % 4]}`}>
+      <div className="pnl-adv-icon">{icon}</div>
+      <AdvTitle lines={a.title} />
+      <AdvText text={a.text} />
+    </div>
+  );
+}
+
 function Advantages() {
   return (
-    <section className="pnl-block pnl-block--dark" id="pnl-advantages">
+    <section className="pnl-block pnl-block--cream pnl-block--tetris" id="pnl-advantages">
+      <SteelTetrisBackground variant="light" />
       <div className="pnl-container">
-        <h2 className="section-h2 pnl-section-h2 pnl-section-h2--light reveal">
+        <h2 className="section-h2 pnl-section-h2 reveal">
           Six advantages you can&apos;t afford to ignore:
         </h2>
         <div className="pnl-adv-grid">
           {ADVANTAGES_FIRST.map((a, i) => (
-            <div key={a.title.join()} className={`pnl-adv-card reveal${DELAY[i % 4]}`}>
-              <div className="pnl-adv-card-top">
-                <div className="pnl-adv-icon">{ADV_ICONS[i]}</div>
-                <span className="pnl-adv-index">{String(i + 1).padStart(2, "0")}</span>
-              </div>
-              <AdvTitle lines={a.title} />
-              <AdvText text={a.text} />
-            </div>
+            <AdvCard key={a.title.join()} a={a} index={i} icon={ADV_ICONS[i]} />
           ))}
         </div>
-        <h2 className="section-h2 pnl-section-h2 pnl-section-h2--light pnl-section-h2--spaced reveal">
+        <h2 className="section-h2 pnl-section-h2 pnl-section-h2--spaced reveal">
           ... and six more:
         </h2>
         <div className="pnl-adv-grid">
           {ADVANTAGES_SECOND.map((a, i) => (
-            <div key={a.title.join()} className={`pnl-adv-card reveal${DELAY[i % 4]}`}>
-              <div className="pnl-adv-card-top">
-                <div className="pnl-adv-icon">{ADV_ICONS[i + 6]}</div>
-                <span className="pnl-adv-index">{String(i + 7).padStart(2, "0")}</span>
-              </div>
-              <AdvTitle lines={a.title} />
-              <AdvText text={a.text} />
-            </div>
+            <AdvCard key={a.title.join()} a={a} index={i + 6} icon={ADV_ICONS[i + 6]} />
           ))}
         </div>
       </div>
