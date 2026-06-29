@@ -171,7 +171,7 @@ function rowPixelCounts(cells: PixelCell[]): Map<number, number> {
   return counts;
 }
 
-/** Drop sparse bottom rows (e.g. O / round-letter antialias hang). */
+/** Drop sparse bottom rows (e.g. round-letter antialias hang). */
 function trimDanglingBottomRows(cells: PixelCell[]): PixelCell[] {
   if (cells.length === 0) return cells;
 
@@ -194,6 +194,34 @@ function trimDanglingBottomRows(cells: PixelCell[]): PixelCell[] {
 
   if (cutoff === maxGy) return cells;
   return cells.filter((c) => c.gy <= cutoff);
+}
+
+/** Extend every letter's floor row so all glyphs kiss the same baseline. */
+function sealWordFloor(cells: PixelCell[]): PixelCell[] {
+  if (cells.length === 0) return cells;
+
+  let floorGy = 0;
+  for (const c of cells) {
+    if (c.gy > floorGy) floorGy = c.gy;
+  }
+
+  const bottomSubRow = CELL_SUB - 1;
+  for (const c of cells) {
+    if (c.gy !== floorGy || c.subMask === FULL_SUB_MASK) continue;
+    let mask = c.subMask;
+    for (let sx = 0; sx < CELL_SUB; sx++) {
+      for (let sy = 0; sy < bottomSubRow; sy++) {
+        const bit = sy * CELL_SUB + sx;
+        if ((mask >> bit) & 1) {
+          mask |= 1 << (bottomSubRow * CELL_SUB + sx);
+          break;
+        }
+      }
+    }
+    c.subMask = mask;
+  }
+
+  return cells;
 }
 
 function sampleRaster(
@@ -232,7 +260,7 @@ function sampleRaster(
   if (cells.length < 20) return null;
   if (cells.length > cols * rows * 0.52) return null;
 
-  const trimmed = trimDanglingBottomRows(cells);
+  const trimmed = sealWordFloor(trimDanglingBottomRows(cells));
   if (trimmed.length < 20) return null;
 
   trimmed.sort((a, b) => a.order - b.order);
@@ -477,9 +505,12 @@ export function drawMorphFrame(
     const block = cellSize + 1;
     const ix = Math.floor(x);
     const iy = Math.floor(y);
+    const floorRow = cell.gy === mask.maxGy;
+    const canvasBottom = height;
 
     if (cell.subMask === FULL_SUB_MASK) {
-      ctx.fillRect(ix, iy, block, block);
+      const rectH = floorRow ? Math.max(block, canvasBottom - iy) : block;
+      ctx.fillRect(ix, iy, block, rectH);
       return;
     }
 
@@ -489,12 +520,13 @@ export function drawMorphFrame(
       for (let sx = 0; sx < CELL_SUB; sx++) {
         const bit = sy * CELL_SUB + sx;
         if ((cell.subMask >> bit) & 1) {
-          ctx.fillRect(
-            Math.floor(ix + sx * subSpan),
-            Math.floor(iy + sy * subSpan),
-            subSize,
-            subSize
-          );
+          const rx = Math.floor(ix + sx * subSpan);
+          const ry = Math.floor(iy + sy * subSpan);
+          let rh = subSize;
+          if (floorRow && sy === CELL_SUB - 1) {
+            rh = Math.max(subSize + 1, canvasBottom - ry);
+          }
+          ctx.fillRect(rx, ry, subSize, rh);
         }
       }
     }
