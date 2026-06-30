@@ -51,92 +51,144 @@ function isOverDarkZone(): boolean {
   );
 }
 
+type Wave = {
+  id: number;
+  el: HTMLSpanElement;
+  anim: Animation | null;
+  phase: "enter" | "exit";
+};
+
+function readElState(el: HTMLSpanElement, clip: HTMLSpanElement): LineState {
+  const clipWidth = clip.clientWidth;
+  if (clipWidth <= 0) return { left: 0, width: 0 };
+
+  const elRect = el.getBoundingClientRect();
+  const clipRect = clip.getBoundingClientRect();
+  return {
+    left: ((elRect.left - clipRect.left) / clipWidth) * 100,
+    width: (elRect.width / clipWidth) * 100,
+  };
+}
+
+function animDistance(from: LineState, to: LineState) {
+  return Math.max(
+    Math.abs(to.width - from.width),
+    Math.abs(to.left - from.left)
+  ) / 100;
+}
+
 function NavLink({ href, label }: { href: string; label: string }) {
-  const lineRef = useRef<HTMLSpanElement>(null);
-  const stateRef = useRef<LineState>({ left: 0, width: 0 });
-  const animRef = useRef<Animation | null>(null);
-  const segRef = useRef<{ from: LineState; to: LineState }>({
-    from: { left: 0, width: 0 },
-    to: { left: 0, width: 0 },
-  });
+  const clipRef = useRef<HTMLSpanElement>(null);
+  const wavesRef = useRef<Wave[]>([]);
+  const idRef = useRef(0);
 
-  const applyState = (state: LineState) => {
-    const line = lineRef.current;
-    if (!line) return;
-    line.style.left = `${state.left}%`;
-    line.style.width = `${state.width}%`;
+  useLayoutEffect(() => {
+    return () => {
+      for (const wave of wavesRef.current) {
+        wave.anim?.cancel();
+        wave.el.remove();
+      }
+      wavesRef.current = [];
+    };
+  }, []);
+
+  const removeWave = (wave: Wave) => {
+    wave.anim?.cancel();
+    wave.el.remove();
+    wavesRef.current = wavesRef.current.filter((w) => w.id !== wave.id);
   };
 
-  const readState = (): LineState => {
-    const anim = animRef.current;
-    if (anim && anim.playState === "running") {
-      const timing = (anim.effect as KeyframeEffect).getComputedTiming();
-      const progress = typeof timing.progress === "number" ? timing.progress : 0;
-      const { from, to } = segRef.current;
-      return {
-        left: from.left + (to.left - from.left) * progress,
-        width: from.width + (to.width - from.width) * progress,
-      };
-    }
-    return stateRef.current;
-  };
+  const runWaveAnim = (
+    wave: Wave,
+    from: LineState,
+    to: LineState,
+    onDone?: () => void
+  ) => {
+    const reducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+    const distance = animDistance(from, to);
+    const duration = reducedMotion ? 0 : NAV_LINE_MS * Math.max(distance, 0.12);
 
-  const runAnim = (from: LineState, to: LineState) => {
-    const line = lineRef.current;
-    if (!line) return;
-
-    animRef.current?.cancel();
-
-    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const distance =
-      Math.max(Math.abs(to.width - from.width), Math.abs(to.left - from.left)) / 100;
-    const duration = reducedMotion ? 0 : NAV_LINE_MS * distance;
+    wave.el.style.left = `${from.left}%`;
+    wave.el.style.width = `${from.width}%`;
 
     if (duration <= 0) {
-      stateRef.current = to;
-      applyState(to);
-      animRef.current = null;
+      wave.el.style.left = `${to.left}%`;
+      wave.el.style.width = `${to.width}%`;
+      onDone?.();
       return;
     }
 
-    segRef.current = { from, to };
-    const anim = line.animate(
+    wave.anim?.cancel();
+    const anim = wave.el.animate(
       [
         { left: `${from.left}%`, width: `${from.width}%` },
         { left: `${to.left}%`, width: `${to.width}%` },
       ],
       { duration, fill: "forwards", easing: NAV_LINE_EASING }
     );
+    wave.anim = anim;
     anim.onfinish = () => {
-      if (to.left === 100) {
-        const hidden = { left: 0, width: 0 };
-        stateRef.current = hidden;
-        applyState(hidden);
-      } else {
-        stateRef.current = to;
-      }
-      animRef.current = null;
+      wave.el.style.left = `${to.left}%`;
+      wave.el.style.width = `${to.width}%`;
+      wave.anim = null;
+      onDone?.();
     };
-    animRef.current = anim;
+  };
+
+  const spawnEnterWave = () => {
+    const clip = clipRef.current;
+    if (!clip) return;
+
+    const link = clip.parentElement;
+    const waveColor = link ? getComputedStyle(link).color : "";
+
+    const el = document.createElement("span");
+    el.className = "nav-link-wave";
+    el.style.left = "0%";
+    el.style.width = "0%";
+    if (waveColor) el.style.backgroundColor = waveColor;
+    clip.appendChild(el);
+
+    const wave: Wave = { id: ++idRef.current, el, anim: null, phase: "enter" };
+    wavesRef.current.push(wave);
+
+    runWaveAnim(wave, { left: 0, width: 0 }, { left: 0, width: 100 });
+  };
+
+  const exitWave = (wave: Wave) => {
+    if (wave.phase === "exit") return;
+    wave.phase = "exit";
+
+    const clip = clipRef.current;
+    if (!clip) return;
+
+    if (wave.anim) {
+      wave.anim.commitStyles();
+      wave.anim.cancel();
+      wave.anim = null;
+    }
+
+    const from = readElState(wave.el, clip);
+    if (from.width <= 0.5) {
+      removeWave(wave);
+      return;
+    }
+
+    runWaveAnim(wave, from, { left: 100, width: from.width }, () =>
+      removeWave(wave)
+    );
   };
 
   const onEnter = () => {
-    const current = readState();
-    const from = { left: 0, width: current.width };
-
-    if (current.left > 0) {
-      stateRef.current = from;
-      applyState(from);
-    }
-
-    runAnim(from, { left: 0, width: 100 });
+    spawnEnterWave();
   };
 
   const onLeave = () => {
-    const current = readState();
-    if (current.width <= 0) return;
-
-    runAnim(current, { left: 100, width: current.width });
+    for (const wave of [...wavesRef.current]) {
+      if (wave.phase === "enter") exitWave(wave);
+    }
   };
 
   return (
@@ -147,9 +199,7 @@ function NavLink({ href, label }: { href: string; label: string }) {
       onMouseLeave={onLeave}
     >
       {label}
-      <span className="nav-link-clip" aria-hidden="true">
-        <span ref={lineRef} className="nav-link-line" />
-      </span>
+      <span ref={clipRef} className="nav-link-clip" aria-hidden="true" />
     </Link>
   );
 }
