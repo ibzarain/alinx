@@ -45,11 +45,6 @@ export default function RootLayout({
           as="image"
           href={heroFrameSrcForManifest(0, HERO_MANIFEST)}
         />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{if((window.scrollY||0)<16)document.documentElement.classList.add("nav-over-dark-initial")}catch(e){}})();`,
-          }}
-        />
       </head>
       <body className="min-h-full flex flex-col">
         <Nav />

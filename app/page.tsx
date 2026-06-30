@@ -90,7 +90,7 @@ function Services() {
               panelized interior and fully-finished exterior structural panels.
             </p>
             <Link href="/panelized" className="svc-explore-link">
-              Explore Panelized
+              <span className="btn-green-label">Explore Panelized</span>
             </Link>
           </div>
         </div>
@@ -109,7 +109,7 @@ function Services() {
               Volumetric is finally a practical option.
             </p>
             <Link href="/volumetric" className="svc-explore-link">
-              Explore Volumetric
+              <span className="btn-green-label">Explore Volumetric</span>
             </Link>
           </div>
         </div>

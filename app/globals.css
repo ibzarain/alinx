@@ -10,6 +10,14 @@
   /* Brand accents */
   --olive:   #7a9e4a;   /* matches logo mark */
   --olive2:  #5c7a38;
+  --btn-green-text-hover: #d4e8b8;
+  --btn-green-bg: #7a9e4a;
+  --btn-green-mid: #5c7a38;
+  --btn-green-dark: #0b1808;
+  --btn-sweep-dur: 0.4s;
+  --btn-sweep-stagger: 0.1s;
+  --btn-sweep-ease-in: cubic-bezier(0.16, 1, 0.3, 1);
+  --btn-sweep-ease-out: cubic-bezier(0.4, 0, 0.2, 1);
   --gold:    #9e7820;   /* deepened for light-bg contrast — still warm amber */
   --gold2:   rgba(158,120,32,0.09);
 
@@ -118,18 +126,26 @@ nav.site-nav.nav-over-dark.scrolled {
 }
 
 /* Before React hydrates — dark heroes sit under the nav at scroll 0 */
-html.nav-over-dark-initial nav.site-nav {
+html:has(#hero) nav.site-nav:not(.nav-ready),
+html:has(.page-hero-band[data-nav-theme="dark"]) nav.site-nav:not(.nav-ready),
+html:has(.pnl-hero) nav.site-nav:not(.nav-ready) {
   background: rgba(10,13,20,0.42);
   border-bottom-color: transparent;
   box-shadow: none;
 }
-html.nav-over-dark-initial nav.site-nav .nav-logo-img {
+html:has(#hero) nav.site-nav:not(.nav-ready) .nav-logo-img,
+html:has(.page-hero-band[data-nav-theme="dark"]) nav.site-nav:not(.nav-ready) .nav-logo-img,
+html:has(.pnl-hero) nav.site-nav:not(.nav-ready) .nav-logo-img {
   filter: brightness(0) invert(1);
 }
-html.nav-over-dark-initial nav.site-nav .nav-links a {
+html:has(#hero) nav.site-nav:not(.nav-ready) .nav-links .nav-link,
+html:has(.page-hero-band[data-nav-theme="dark"]) nav.site-nav:not(.nav-ready) .nav-links .nav-link,
+html:has(.pnl-hero) nav.site-nav:not(.nav-ready) .nav-links .nav-link {
   color: rgba(240,237,230,0.65);
 }
-html.nav-over-dark-initial nav.site-nav .nav-hamburger span {
+html:has(#hero) nav.site-nav:not(.nav-ready) .nav-hamburger span,
+html:has(.page-hero-band[data-nav-theme="dark"]) nav.site-nav:not(.nav-ready) .nav-hamburger span,
+html:has(.pnl-hero) nav.site-nav:not(.nav-ready) .nav-hamburger span {
   background: #fff;
 }
 
@@ -147,16 +163,40 @@ nav.site-nav.nav-over-dark .nav-logo-img {
   filter: brightness(0) invert(1);
 }
 
-.nav-links { display: flex; gap: 1.5rem; list-style: none; }
-.nav-links a {
+.nav-links { display: flex; align-items: center; gap: 1.5rem; margin: 0; padding: 0; list-style: none; }
+.nav-links li { display: flex; align-items: center; }
+.nav-links .nav-link {
+  position: relative;
+  display: inline-block;
   color: var(--text2); text-decoration: none;
   font-size: 0.75rem; font-weight: 500;
   letter-spacing: 0.08em; text-transform: uppercase;
-  transition: color 0.2s;
+  line-height: 1;
+  transition: color 0.2s ease;
 }
-.nav-links a:hover { color: var(--text); }
-nav.site-nav.nav-over-dark .nav-links a { color: rgba(240,237,230,0.65); }
-nav.site-nav.nav-over-dark .nav-links a:hover { color: #fff; }
+.nav-links .nav-link-clip {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  margin-top: 0.2rem;
+  height: 1.5px;
+  overflow: hidden;
+  pointer-events: none;
+}
+.nav-links .nav-link-line {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 0;
+  height: 100%;
+  background: currentColor;
+}
+.nav-links .nav-link:hover {
+  color: var(--text);
+}
+nav.site-nav.nav-over-dark .nav-links .nav-link { color: rgba(240,237,230,0.65); }
+nav.site-nav.nav-over-dark .nav-links .nav-link:hover { color: #fff; }
 
 .nav-cta {
   padding: 0.55rem 1.4rem;
@@ -165,9 +205,7 @@ nav.site-nav.nav-over-dark .nav-links a:hover { color: #fff; }
   font-size: 0.9rem; font-weight: 700;
   letter-spacing: 0.1em; text-transform: uppercase;
   text-decoration: none;
-  transition: background 0.25s, transform 0.2s;
 }
-.nav-cta:hover { background: var(--olive2); transform: translateY(-1px); }
 
 .nav-hamburger {
   display: none;
@@ -390,17 +428,12 @@ html.hero-scroll-lock nav.site-nav {
   letter-spacing: 0.1em;
   text-transform: uppercase;
   text-decoration: none;
-  transition: background 0.2s, border-color 0.2s, color 0.2s, transform 0.2s;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
 }
 .btn-hero--fill {
-  background: var(--olive);
+  background: var(--btn-green-bg);
   color: #fff;
-  border: 1px solid var(--olive);
-}
-.btn-hero--fill:hover {
-  background: var(--olive2);
-  border-color: var(--olive2);
-  transform: translateY(-2px);
+  border: none;
 }
 .btn-hero--line {
   background: transparent;
@@ -410,7 +443,6 @@ html.hero-scroll-lock nav.site-nav {
 .btn-hero--line:hover {
   border-color: var(--hero-text);
   color: #fff;
-  transform: translateY(-2px);
 }
 
 /* Scroll-driven narrative — large morphing words + contextual stats */
@@ -582,17 +614,122 @@ html.hero-scroll-lock nav.site-nav {
 }
 
 /* ─── BUTTONS ──────────────────────────────────── */
+.nav-cta,
+.mobile-cta,
+.btn-hero--fill,
+.btn-primary,
+.svc-explore-link {
+  position: relative;
+  overflow: hidden;
+  z-index: 0;
+  border: none;
+  background: var(--btn-green-bg);
+  color: #fff;
+  -webkit-font-smoothing: antialiased;
+  transition: color 0.22s var(--btn-sweep-ease-in) 0.28s;
+}
+.nav-cta::before,
+.mobile-cta::before,
+.btn-hero--fill::before,
+.btn-primary::before,
+.svc-explore-link::before,
+.nav-cta::after,
+.mobile-cta::after,
+.btn-hero--fill::after,
+.btn-primary::after,
+.svc-explore-link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  transform: scale3d(1, 0, 1);
+  transform-origin: bottom center;
+  transition: transform var(--btn-sweep-dur) var(--btn-sweep-ease-out);
+}
+.nav-cta::before,
+.mobile-cta::before,
+.btn-hero--fill::before,
+.btn-primary::before,
+.svc-explore-link::before {
+  background: var(--btn-green-mid);
+  transition-delay: var(--btn-sweep-stagger);
+}
+.nav-cta::after,
+.mobile-cta::after,
+.btn-hero--fill::after,
+.btn-primary::after,
+.svc-explore-link::after {
+  background: var(--btn-green-dark);
+  transition-delay: 0s;
+}
+.nav-cta .btn-green-label,
+.mobile-cta .btn-green-label,
+.btn-hero--fill .btn-green-label,
+.btn-primary .btn-green-label,
+.svc-explore-link .btn-green-label {
+  position: relative;
+  z-index: 1;
+}
+.nav-cta:hover,
+.mobile-cta:hover,
+.btn-hero--fill:hover,
+.btn-primary:hover,
+.svc-explore-link:hover {
+  color: var(--btn-green-text-hover);
+  transition: color 0.22s var(--btn-sweep-ease-in) 0.3s;
+}
+.nav-cta:hover::before,
+.mobile-cta:hover::before,
+.btn-hero--fill:hover::before,
+.btn-primary:hover::before,
+.svc-explore-link:hover::before,
+.nav-cta:hover::after,
+.mobile-cta:hover::after,
+.btn-hero--fill:hover::after,
+.btn-primary:hover::after,
+.svc-explore-link:hover::after {
+  transform: scale3d(1, 1, 1);
+}
+.nav-cta:hover::before,
+.mobile-cta:hover::before,
+.btn-hero--fill:hover::before,
+.btn-primary:hover::before,
+.svc-explore-link:hover::before {
+  transition: transform var(--btn-sweep-dur) var(--btn-sweep-ease-in);
+  transition-delay: 0s;
+}
+.nav-cta:hover::after,
+.mobile-cta:hover::after,
+.btn-hero--fill:hover::after,
+.btn-primary:hover::after,
+.svc-explore-link:hover::after {
+  transition: transform var(--btn-sweep-dur) var(--btn-sweep-ease-in);
+  transition-delay: var(--btn-sweep-stagger);
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav-cta::before,
+  .mobile-cta::before,
+  .btn-hero--fill::before,
+  .btn-primary::before,
+  .svc-explore-link::before,
+  .nav-cta::after,
+  .mobile-cta::after,
+  .btn-hero--fill::after,
+  .btn-primary::after,
+  .svc-explore-link::after {
+    transition: none;
+  }
+}
+
 .btn-primary {
   padding: 0.9rem 2.2rem;
-  background: var(--olive); color: #fff;
   font-family: var(--font-barlow, 'Barlow Condensed', sans-serif);
   font-size: 1.05rem; font-weight: 700;
   letter-spacing: 0.1em; text-transform: uppercase;
   border: none; cursor: pointer; text-decoration: none;
   display: inline-block;
-  transition: background 0.25s, transform 0.2s;
 }
-.btn-primary:hover { background: var(--olive2); transform: translateY(-2px); }
 
 .btn-ghost {
   padding: 0.9rem 2.2rem;
@@ -1977,8 +2114,6 @@ footer.site-footer {
   gap: 0.5rem;
   margin-top: 2rem;
   padding: 1rem 2.25rem;
-  background: var(--olive);
-  color: #fff;
   font-family: var(--font-barlow, 'Barlow Condensed', sans-serif);
   font-size: 1.05rem;
   font-weight: 700;
@@ -1987,13 +2122,10 @@ footer.site-footer {
   text-decoration: none;
   border: none;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
-  transition: background 0.25s, transform 0.2s, box-shadow 0.25s;
+  transition: color 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s;
 }
 .svc-explore-link:hover {
-  background: var(--olive2);
-  color: #fff;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
 }
 .svc-card .svc-explore-link {
   align-self: flex-start;

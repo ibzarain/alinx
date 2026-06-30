@@ -114,7 +114,12 @@ export default function SteelTetrisBackground({
       ([entry]) => {
         visible = entry.isIntersecting;
       },
-      { threshold: 0.05 }
+      {
+        threshold: 0,
+        // Start the drop sequence ~1.5 viewports before the section enters,
+        // so blocks are already falling by the time you scroll into view.
+        rootMargin: "20% 0px 150% 0px",
+      }
     );
     observer.observe(wrap);
 
