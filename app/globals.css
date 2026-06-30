@@ -200,12 +200,25 @@ nav.site-nav.nav-over-dark .nav-links .nav-link { color: rgba(240,237,230,0.65);
 nav.site-nav.nav-over-dark .nav-links .nav-link:hover { color: #fff; }
 
 .nav-cta {
+  --btn-outline-text: var(--text2);
   padding: 0.55rem 1.4rem;
-  background: var(--olive); color: #fff;
   font-family: var(--font-barlow, 'Barlow Condensed', sans-serif);
-  font-size: 0.9rem; font-weight: 700;
-  letter-spacing: 0.1em; text-transform: uppercase;
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   text-decoration: none;
+  border: 1px solid var(--border);
+}
+nav.site-nav.nav-over-dark .nav-cta {
+  --btn-outline-text: rgba(240, 237, 230, 0.85);
+  border-color: rgba(240, 237, 230, 0.35);
+}
+html:has(#hero) nav.site-nav:not(.nav-ready) .nav-cta,
+html:has(.page-hero-band[data-nav-theme="dark"]) nav.site-nav:not(.nav-ready) .nav-cta,
+html:has(.pnl-hero) nav.site-nav:not(.nav-ready) .nav-cta {
+  --btn-outline-text: rgba(240, 237, 230, 0.85);
+  border-color: rgba(240, 237, 230, 0.35);
 }
 
 .nav-hamburger {
@@ -431,19 +444,96 @@ html.hero-scroll-lock nav.site-nav {
   text-decoration: none;
   transition: background 0.2s, border-color 0.2s, color 0.2s;
 }
+.btn-hero.btn-hero--fill {
+  transition: none;
+}
 .btn-hero--fill {
   background: var(--btn-green-bg);
   color: #fff;
   border: none;
 }
-.btn-hero--line {
+.btn-hero--line,
+.nav-cta {
+  position: relative;
+  overflow: hidden;
+  z-index: 0;
   background: transparent;
-  color: var(--hero-text);
+  color: var(--btn-outline-text, var(--hero-text));
+  -webkit-font-smoothing: antialiased;
+  transition: border-color 0.22s var(--btn-sweep-ease-in) 0.12s;
+}
+.btn-hero--line {
   border: 1px solid rgba(240, 237, 230, 0.35);
 }
-.btn-hero--line:hover {
-  border-color: var(--hero-text);
-  color: #fff;
+.btn-hero--line::before,
+.btn-hero--line::after,
+.nav-cta::before,
+.nav-cta::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  transform: scale3d(1, 0, 1);
+  transform-origin: bottom center;
+  transition: transform var(--btn-sweep-dur) var(--btn-sweep-ease-out);
+}
+.btn-hero--line::before,
+.nav-cta::before {
+  background: var(--btn-green-bg);
+  transition-delay: var(--btn-sweep-stagger);
+}
+.btn-hero--line::after,
+.nav-cta::after {
+  background: #f0ede6;
+  transition-delay: 0s;
+}
+.btn-hero--line .btn-green-label,
+.nav-cta .btn-green-label {
+  position: relative;
+  z-index: 1;
+  color: var(--btn-outline-text, var(--hero-text));
+  transition: color calc(var(--btn-sweep-dur) + var(--btn-sweep-stagger))
+    var(--btn-sweep-ease-out);
+  transition-delay: var(--btn-sweep-stagger);
+}
+.btn-hero--line:hover,
+.nav-cta:hover {
+  border-color: transparent;
+  transition: border-color 0.22s var(--btn-sweep-ease-in) 0s;
+}
+.btn-hero--line:hover::before,
+.btn-hero--line:hover::after,
+.nav-cta:hover::before,
+.nav-cta:hover::after {
+  transform: scale3d(1, 1, 1);
+}
+.btn-hero--line:hover::before,
+.nav-cta:hover::before {
+  transition: transform var(--btn-sweep-dur) var(--btn-sweep-ease-in);
+  transition-delay: 0s;
+}
+.btn-hero--line:hover::after,
+.nav-cta:hover::after {
+  transition: transform var(--btn-sweep-dur) var(--btn-sweep-ease-in);
+  transition-delay: var(--btn-sweep-stagger);
+}
+.btn-hero--line:hover .btn-green-label,
+.nav-cta:hover .btn-green-label {
+  animation: btn-hero-line-text-in calc(var(--btn-sweep-dur) + var(--btn-sweep-stagger))
+    var(--btn-sweep-ease-in) forwards;
+  transition: none;
+}
+@keyframes btn-hero-line-text-in {
+  0% {
+    color: var(--btn-outline-text, var(--hero-text));
+  }
+  38% {
+    color: #fff;
+  }
+  100% {
+    color: var(--btn-green-dark);
+  }
 }
 
 /* Scroll-driven narrative — large morphing words + contextual stats */
@@ -615,7 +705,6 @@ html.hero-scroll-lock nav.site-nav {
 }
 
 /* ─── BUTTONS ──────────────────────────────────── */
-.nav-cta,
 .mobile-cta,
 .btn-hero--fill,
 .btn-primary,
@@ -627,14 +716,11 @@ html.hero-scroll-lock nav.site-nav {
   background: var(--btn-green-bg);
   color: #fff;
   -webkit-font-smoothing: antialiased;
-  transition: color 0.22s var(--btn-sweep-ease-in) 0.28s;
 }
-.nav-cta::before,
 .mobile-cta::before,
 .btn-hero--fill::before,
 .btn-primary::before,
 .svc-explore-link::before,
-.nav-cta::after,
 .mobile-cta::after,
 .btn-hero--fill::after,
 .btn-primary::after,
@@ -648,15 +734,13 @@ html.hero-scroll-lock nav.site-nav {
   transform-origin: bottom center;
   transition: transform var(--btn-sweep-dur) var(--btn-sweep-ease-out);
 }
-.nav-cta::before,
 .mobile-cta::before,
 .btn-hero--fill::before,
 .btn-primary::before,
 .svc-explore-link::before {
-  background: var(--btn-green-mid);
+  background: #f0ede6;
   transition-delay: var(--btn-sweep-stagger);
 }
-.nav-cta::after,
 .mobile-cta::after,
 .btn-hero--fill::after,
 .btn-primary::after,
@@ -664,35 +748,33 @@ html.hero-scroll-lock nav.site-nav {
   background: var(--btn-green-dark);
   transition-delay: 0s;
 }
-.nav-cta .btn-green-label,
 .mobile-cta .btn-green-label,
 .btn-hero--fill .btn-green-label,
 .btn-primary .btn-green-label,
 .svc-explore-link .btn-green-label {
   position: relative;
   z-index: 1;
+  color: #fff;
+  transition: color calc(var(--btn-sweep-dur) + var(--btn-sweep-stagger))
+    var(--btn-sweep-ease-out);
+  transition-delay: var(--btn-sweep-stagger);
 }
-.nav-cta:hover,
 .mobile-cta:hover,
 .btn-hero--fill:hover,
 .btn-primary:hover,
 .svc-explore-link:hover {
-  color: var(--btn-green-text-hover);
-  transition: color 0.22s var(--btn-sweep-ease-in) 0.3s;
+  color: #fff;
 }
-.nav-cta:hover::before,
 .mobile-cta:hover::before,
 .btn-hero--fill:hover::before,
 .btn-primary:hover::before,
 .svc-explore-link:hover::before,
-.nav-cta:hover::after,
 .mobile-cta:hover::after,
 .btn-hero--fill:hover::after,
 .btn-primary:hover::after,
 .svc-explore-link:hover::after {
   transform: scale3d(1, 1, 1);
 }
-.nav-cta:hover::before,
 .mobile-cta:hover::before,
 .btn-hero--fill:hover::before,
 .btn-primary:hover::before,
@@ -700,7 +782,6 @@ html.hero-scroll-lock nav.site-nav {
   transition: transform var(--btn-sweep-dur) var(--btn-sweep-ease-in);
   transition-delay: 0s;
 }
-.nav-cta:hover::after,
 .mobile-cta:hover::after,
 .btn-hero--fill:hover::after,
 .btn-primary:hover::after,
@@ -708,18 +789,57 @@ html.hero-scroll-lock nav.site-nav {
   transition: transform var(--btn-sweep-dur) var(--btn-sweep-ease-in);
   transition-delay: var(--btn-sweep-stagger);
 }
+.mobile-cta:hover .btn-green-label,
+.btn-hero--fill:hover .btn-green-label,
+.btn-primary:hover .btn-green-label,
+.svc-explore-link:hover .btn-green-label {
+  animation: btn-green-fill-text-in calc(var(--btn-sweep-dur) + var(--btn-sweep-stagger))
+    var(--btn-sweep-ease-in) forwards;
+  transition: none;
+}
+@keyframes btn-green-fill-text-in {
+  0% {
+    color: #fff;
+  }
+  38% {
+    color: var(--btn-green-dark);
+  }
+  100% {
+    color: #fff;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
-  .nav-cta::before,
   .mobile-cta::before,
   .btn-hero--fill::before,
   .btn-primary::before,
   .svc-explore-link::before,
-  .nav-cta::after,
   .mobile-cta::after,
   .btn-hero--fill::after,
   .btn-primary::after,
-  .svc-explore-link::after {
+  .svc-explore-link::after,
+  .btn-hero--line::before,
+  .btn-hero--line::after,
+  .nav-cta::before,
+  .nav-cta::after {
     transition: none;
+  }
+  .btn-hero--line:hover .btn-green-label,
+  .nav-cta:hover .btn-green-label,
+  .mobile-cta:hover .btn-green-label,
+  .btn-hero--fill:hover .btn-green-label,
+  .btn-primary:hover .btn-green-label,
+  .svc-explore-link:hover .btn-green-label {
+    animation: none;
+  }
+  .btn-hero--line:hover .btn-green-label,
+  .nav-cta:hover .btn-green-label {
+    color: var(--btn-green-dark);
+  }
+  .mobile-cta:hover .btn-green-label,
+  .btn-hero--fill:hover .btn-green-label,
+  .btn-primary:hover .btn-green-label,
+  .svc-explore-link:hover .btn-green-label {
+    color: #fff;
   }
 }
 
@@ -2123,7 +2243,7 @@ footer.site-footer {
   text-decoration: none;
   border: none;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
-  transition: color 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s;
+  transition: box-shadow 0.25s;
 }
 .svc-explore-link:hover {
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
