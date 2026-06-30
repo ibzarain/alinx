@@ -257,7 +257,7 @@ function applyWordGlyphPatches(
   if (!oRange) return mask;
 
   const cells = dropGlyphBottomRow(mask.cells, oRange.gxMin, oRange.gxMax);
-  return finalizeMaskBounds({ ...mask, cells });
+  return { ...mask, cells };
 }
 
 /** Drop lone antialias specks that read as stray dots between letters. */
