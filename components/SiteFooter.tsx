@@ -149,35 +149,37 @@ export default function SiteFooter() {
           </FooterColumn>
         </div>
 
-        <div className="footer-offices-row">
-          {OFFICES.map((office) => (
-            <div key={office.label} className="footer-office">
-              <span className="footer-office-label">{office.label}</span>
-              <address>
-                {office.lines.map((line, i) => (
-                  <span key={line}>
-                    {line}
-                    {i < office.lines.length - 1 && <br />}
-                  </span>
-                ))}
-              </address>
-            </div>
-          ))}
-        </div>
+        <div className="footer-lower">
+          <div className="footer-offices">
+            {OFFICES.map((office) => (
+              <div key={office.label} className="footer-office">
+                <span className="footer-office-label">{office.label}</span>
+                <address>
+                  {office.lines.map((line, i) => (
+                    <span key={line}>
+                      {line}
+                      {i < office.lines.length - 1 && <br />}
+                    </span>
+                  ))}
+                </address>
+              </div>
+            ))}
+          </div>
 
-        <div className="footer-sustainability">
-          <h4 className="footer-sustainability-title">
-            Our Commitment to Sustainability
-          </h4>
-          <p className="footer-sustainability-text">
-            Environmentally responsible and resource-efficient construction
-            practices are core principles of our business, guiding everything
-            we do from planning to design, construction, operation,
-            maintenance, fabrication and waste management. Sustainable
-            construction is not only ethical but practical. Reducing our
-            overall environmental impacts offers immediate and long-term
-            advantages to our clients and the community.
-          </p>
+          <div className="footer-sustainability">
+            <h4 className="footer-sustainability-title">
+              Our Commitment to Sustainability
+            </h4>
+            <p className="footer-sustainability-text">
+              Environmentally responsible and resource-efficient construction
+              practices are core principles of our business, guiding everything
+              we do from planning to design, construction, operation,
+              maintenance, fabrication and waste management. Sustainable
+              construction is not only ethical but practical. Reducing our
+              overall environmental impacts offers immediate and long-term
+              advantages to our clients and the community.
+            </p>
+          </div>
         </div>
 
         <div className="footer-bottom">

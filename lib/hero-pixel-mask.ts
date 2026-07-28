@@ -2,9 +2,11 @@
  * Hero pixel morph — square grid with smooth edge sub-pixels.
  */
 
-/** Subdivisions per grid cell for edge smoothing (4×4 → 16-bit mask). */
-const CELL_SUB = 4;
+/** Subdivisions per grid cell for edge smoothing (5×5 → 25-bit mask). */
+const CELL_SUB = 5;
 const FULL_SUB_MASK = (1 << (CELL_SUB * CELL_SUB)) - 1;
+/** Extra canvas resolution before CSS downscale for smoother letterforms. */
+const RENDER_SUPER_SAMPLE = 2;
 
 export type PixelCell = {
   gx: number;
@@ -301,7 +303,7 @@ function sampleRaster(
           const i = (py * pixelCols + px) * 4;
           const lum = data[i];
           const alpha = data[i + 3];
-          if (alpha > 100 && lum > 88) {
+          if (alpha > 48 && lum > 64) {
             subMask |= 1 << (sy * sub + sx);
           }
         }
@@ -452,7 +454,6 @@ function rasterizeOnce(
   const ctx = off.getContext("2d", { willReadFrequently: true });
   if (!ctx) return null;
 
-  ctx.imageSmoothingEnabled = false;
   ctx.fillStyle = "#000";
   ctx.fillRect(0, 0, pixelCols, pixelRows);
   ctx.fillStyle = "#fff";
@@ -567,7 +568,8 @@ export function drawMorphFrame(
   state: MorphDrawState,
   alpha = 1
 ) {
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const dpr =
+    Math.min(window.devicePixelRatio || 1, 2.5) * RENDER_SUPER_SAMPLE;
   const { cellSize } = grid;
 
   const from = grid.words[state.wordIndex];
@@ -593,7 +595,6 @@ export function drawMorphFrame(
   if (!ctx) return;
 
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.imageSmoothingEnabled = false;
   ctx.clearRect(0, 0, width, height);
   if (alpha <= 0.004) return;
 
@@ -618,23 +619,17 @@ export function drawMorphFrame(
     ctx.globalAlpha = alpha;
     ctx.fillStyle = pixelColor;
 
-    const ix = Math.floor(x);
-    const iy = Math.floor(y);
-
     if (cell.subMask === FULL_SUB_MASK) {
-      ctx.fillRect(ix, iy, cellSize + 1, cellSize + 1);
+      ctx.fillRect(x, y, cellSize, cellSize);
       return;
     }
 
     const subSpan = cellSize / CELL_SUB;
-    const subSize = Math.max(1, Math.ceil(subSpan));
     for (let sy = 0; sy < CELL_SUB; sy++) {
       for (let sx = 0; sx < CELL_SUB; sx++) {
         const bit = sy * CELL_SUB + sx;
         if ((cell.subMask >> bit) & 1) {
-          const rx = Math.floor(ix + sx * subSpan);
-          const ry = Math.floor(iy + sy * subSpan);
-          ctx.fillRect(rx, ry, subSize, subSize);
+          ctx.fillRect(x + sx * subSpan, y + sy * subSpan, subSpan, subSpan);
         }
       }
     }
